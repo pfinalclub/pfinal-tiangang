@@ -2,8 +2,8 @@
 
 namespace app\admin\controller;
 
-use support\Request;
-use support\Response;
+use Workerman\Protocols\Http\Request;
+use Workerman\Protocols\Http\Response;
 
 /**
  * 仪表板控制器

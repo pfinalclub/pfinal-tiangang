@@ -18,10 +18,10 @@
     },
     "autoload": {
         "psr-4": {
-            "Tiangang\\Waf\\": "app/"
+            "app\\": "app/"
         },
         "files": [
-            "app/helpers.php"
+            "app/admin/helpers/helpers.php"
         ]
     },
     "autoload-dev": {

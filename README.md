@@ -44,8 +44,11 @@ php start.php start
 ### 访问服务
 
 ```bash
-# 访问Web管理界面
-curl http://localhost:8787/
+# 访问登录页面
+curl http://localhost:8787/admin/login
+
+# 登录管理界面（需要认证）
+curl http://localhost:8787/admin
 
 # 访问API接口
 curl http://localhost:8787/api/dashboard
@@ -56,12 +59,26 @@ curl http://localhost:8787/health
 
 ### 🌐 Web管理界面
 
-访问 `http://localhost:8787/` 查看现代化管理界面：
+访问 `http://localhost:8787/admin/login` 登录管理界面：
 
-- 📊 **实时监控**：请求统计、拦截率、响应时间
-- 🔒 **安全报告**：威胁分析、攻击统计
-- ⚡ **性能分析**：系统状态、资源使用
-- 📤 **数据导出**：支持JSON、CSV、XML格式
+#### 🔐 登录系统
+- **现代化登录界面**：基于Figma设计的响应式界面
+- **多用户支持**：管理员、WAF管理员、天罡管理员
+- **会话管理**：安全的Cookie会话和自动过期
+- **记住我功能**：支持长期登录状态
+
+#### 📊 管理功能
+- **实时监控**：请求统计、拦截率、响应时间
+- **安全报告**：威胁分析、攻击统计
+- **性能分析**：系统状态、资源使用
+- **数据导出**：支持JSON、CSV、XML格式
+
+#### 👥 默认账户
+| 用户名 | 密码 | 说明 |
+|--------|------|------|
+| `admin` | `admin123` | 管理员账户 |
+| `waf` | `waf2024` | WAF管理员 |
+| `tiangang` | `tiangang2024` | 天罡管理员 |
 
 ### 🧪 测试功能
 
@@ -117,33 +134,61 @@ for i in {1..10}; do curl http://localhost:8787/; done
 天罡WAF/
 ├── 🚪 入口层
 │   ├── start.php              # 服务器启动入口
-│   └── app/gateway/           # 核心网关
-│       └── TiangangGateway.php
+│   └── app/waf/               # WAF核心模块
+│       └── TiangangGateway.php # 核心网关
 │
 ├── 🛡️ WAF核心层
-│   ├── app/middleware/        # WAF中间件
-│   ├── app/detectors/         # 检测器
+│   ├── app/waf/middleware/    # WAF中间件
+│   │   └── WafMiddleware.php
+│   ├── app/waf/detectors/     # 检测器
 │   │   ├── QuickDetector.php  # 快速检测
 │   │   └── AsyncDetector.php  # 异步检测
-│   └── app/core/              # 核心组件
-│       ├── WafResult.php      # 检测结果
-│       ├── DecisionEngine.php # 决策引擎
-│       └── CoroutinePool.php  # 协程池
+│   ├── app/waf/core/          # 核心组件
+│   │   ├── WafResult.php      # 检测结果
+│   │   ├── DecisionEngine.php # 决策引擎
+│   │   └── CoroutinePool.php  # 协程池
+│   ├── app/waf/logging/       # 日志系统
+│   │   ├── AsyncLogger.php    # 异步日志
+│   │   └── LogCollector.php   # 日志收集
+│   ├── app/waf/monitoring/    # 监控系统
+│   │   └── MetricsCollector.php
+│   ├── app/waf/performance/   # 性能分析
+│   │   └── PerformanceDashboard.php
+│   ├── app/waf/plugins/       # 插件管理
+│   │   ├── PluginManager.php
+│   │   └── WafPluginInterface.php
+│   ├── app/waf/proxy/         # 代理转发
+│   │   ├── ProxyHandler.php
+│   │   └── BackendManager.php
+│   ├── app/waf/config/        # 配置管理
+│   │   └── ConfigManager.php
+│   ├── app/waf/cache/         # 缓存管理
+│   │   └── AsyncCacheManager.php
+│   ├── app/waf/database/      # 数据库管理
+│   │   └── AsyncDatabaseManager.php
+│   └── app/waf/optimization/  # 性能优化
+│       └── PerformanceOptimizer.php
+│
+├── 🌐 管理界面层
+│   ├── app/admin/controller/  # 管理控制器
+│   │   ├── AuthController.php     # 认证控制器
+│   │   ├── DashboardController.php # 仪表板控制器
+│   │   ├── WafController.php      # WAF管理控制器
+│   │   ├── RuleController.php     # 规则管理控制器
+│   │   └── LogController.php      # 日志管理控制器
+│   ├── app/admin/routes/      # 管理路由
+│   │   └── AdminRoutes.php
+│   ├── app/admin/middleware/  # 认证中间件
+│   │   └── AuthMiddleware.php
+│   └── app/admin/helpers/     # 辅助函数
+│       └── helpers.php
 │
 ├── 🔌 插件系统
-│   ├── app/plugins/           # 插件管理
 │   └── plugins/waf/           # WAF规则插件
-│
-├── 🌐 Web管理界面
-│   ├── app/web/               # Web控制台
-│   │   ├── routes/WebRoutes.php
-│   │   └── controllers/DashboardController.php
-│   └── app/api/               # REST API
-│
-├── 📊 监控与日志
-│   ├── app/monitoring/        # 监控系统
-│   ├── app/logging/           # 日志系统
-│   └── app/performance/       # 性能分析
+│       ├── SqlInjectionRule.php
+│       ├── XssRule.php
+│       ├── RateLimitRule.php
+│       └── IpBlacklistRule.php
 │
 └── ⚙️ 配置与测试
     ├── config/                # 配置文件
@@ -159,26 +204,38 @@ for i in {1..10}; do curl http://localhost:8787/; done
 - [x] **WAF核心**：检测引擎 + 决策系统
 - [x] **代理功能**：反向代理 + 负载均衡
 - [x] **Web界面**：管理控制台 + API
+- [x] **登录系统**：用户认证 + 会话管理
 - [x] **监控系统**：性能分析 + 日志记录
 - [x] **测试框架**：单元测试 + 集成测试
 - [x] **混合架构**：同步核心 + 异步后台
 - [x] **离线模式**：无需数据库即可运行
+- [x] **代码重构**：模块化架构 + 清晰结构
 
 ### 🚀 技术亮点
 
 - **混合架构**：核心功能同步处理，后台任务异步执行
+- **模块化设计**：WAF和管理界面完全分离，便于维护
+- **现代化登录**：基于Figma设计的响应式登录界面
 - **插件系统**：可扩展规则引擎
 - **Web管理**：现代化管理界面
 - **实时监控**：完整的监控体系
 - **企业级**：生产环境就绪
+- **代码重构**：清晰的模块化架构
 
 ## 📚 API文档
 
 ### Web管理界面
 
-- **主页**：`GET /` - 管理控制台界面
+- **登录页面**：`GET /admin/login` - 用户登录界面
+- **管理主页**：`GET /admin` - 管理控制台界面
 - **仪表板**：`GET /dashboard` - 仪表板页面
 - **健康检查**：`GET /health` - 系统健康状态
+
+### 认证API
+
+- **用户登录**：`POST /admin/auth/login` - 用户登录
+- **用户登出**：`GET /admin/auth/logout` - 用户登出
+- **会话检查**：自动检查登录状态
 
 ### REST API
 

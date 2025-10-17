@@ -3,7 +3,7 @@
 use Workerman\Worker;
 use Workerman\Protocols\Http\Request;
 use Workerman\Protocols\Http\Response;
-use Tiangang\Waf\Gateway\TiangangGateway;
+use app\waf\TiangangGateway;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
