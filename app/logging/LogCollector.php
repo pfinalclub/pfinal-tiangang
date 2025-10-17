@@ -22,7 +22,12 @@ class LogCollector
     
     public function __construct()
     {
-        $this->config = config('waf.logging');
+        $this->config = config('waf.logging') ?? [
+            'enabled' => true,
+            'level' => 'info',
+            'channels' => ['file', 'redis'],
+            'async' => true,
+        ];
         $this->logger = $this->createLogger();
         $this->redis = $this->createRedisClient();
     }
@@ -128,12 +133,18 @@ class LogCollector
      */
     private function createRedisClient(): RedisClient
     {
-        $config = config('database.redis');
+        $config = config('database.redis') ?? [
+            'host' => '127.0.0.1',
+            'port' => 6379,
+            'password' => '',
+            'database' => 0,
+        ];
+        
         return new RedisClient([
-            'host' => $config['host'],
-            'port' => $config['port'],
-            'password' => $config['password'],
-            'database' => $config['database'],
+            'host' => $config['host'] ?? '127.0.0.1',
+            'port' => $config['port'] ?? 6379,
+            'password' => $config['password'] ?? '',
+            'database' => $config['database'] ?? 0,
         ]);
     }
     

@@ -28,6 +28,11 @@ class WebRoutes
         $path = $request->path();
         $method = $request->method();
 
+        // 检查是否为admin路由
+        if (str_starts_with($path, '/admin')) {
+            return $this->handleAdminRequest($request);
+        }
+
         // 路由匹配
         return match($path) {
             '/' => $this->handleDashboard($request),
@@ -39,6 +44,204 @@ class WebRoutes
             '/health' => $this->handleHealth($request),
             default => $this->handleNotFound($request)
         };
+    }
+
+    /**
+     * 处理 Admin 请求
+     */
+    private function handleAdminRequest(Request $request): Response
+    {
+        $path = $request->path();
+        
+        // 简单的admin路由处理
+        if ($path === '/admin' || $path === '/admin/') {
+            return $this->generateAdminDashboard();
+        }
+        
+        // API路由
+        if (str_starts_with($path, '/admin/api/')) {
+            return $this->handleAdminApi($request);
+        }
+        
+        return new Response(404, [], 'Admin page not found');
+    }
+
+    /**
+     * 生成 Admin 仪表板
+     */
+    private function generateAdminDashboard(): Response
+    {
+        $html = '<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天罡 WAF - Admin 管理控制台</title>
+    <link href="//unpkg.com/layui@2.12.1/dist/css/layui.css" rel="stylesheet">
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .admin-card {
+            margin-bottom: 20px;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+    </style>
+</head>
+<body>
+    <div class="layui-container" style="margin-top: 20px;">
+        <div class="admin-header">
+            <h1>🛡️ 天罡 WAF - Admin 管理控制台</h1>
+            <p>基于 Webman-Admin 的专业管理界面</p>
+        </div>
+
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-md3">
+                <div class="layui-card admin-card">
+                    <div class="layui-card-header">系统概览</div>
+                    <div class="layui-card-body">
+                        <div class="stat-number" id="total-requests">-</div>
+                        <div>总请求数</div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md3">
+                <div class="layui-card admin-card">
+                    <div class="layui-card-header">安全拦截</div>
+                    <div class="layui-card-body">
+                        <div class="stat-number" id="blocked-requests">-</div>
+                        <div>拦截请求</div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md3">
+                <div class="layui-card admin-card">
+                    <div class="layui-card-header">响应时间</div>
+                    <div class="layui-card-body">
+                        <div class="stat-number" id="response-time">-</div>
+                        <div>平均响应时间</div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md3">
+                <div class="layui-card admin-card">
+                    <div class="layui-card-header">系统状态</div>
+                    <div class="layui-card-body">
+                        <div class="stat-number" id="system-status">在线</div>
+                        <div>运行状态</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-md6">
+                <div class="layui-card">
+                    <div class="layui-card-header">快速操作</div>
+                    <div class="layui-card-body">
+                        <button class="layui-btn layui-btn-primary" onclick="loadRules()">规则管理</button>
+                        <button class="layui-btn layui-btn-primary" onclick="loadLogs()">日志查看</button>
+                        <button class="layui-btn layui-btn-primary" onclick="exportData()">数据导出</button>
+                        <button class="layui-btn layui-btn-primary" onclick="systemStatus()">系统状态</button>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-card">
+                    <div class="layui-card-header">最近活动</div>
+                    <div class="layui-card-body" id="recent-activities">
+                        <div class="layui-loading">正在加载活动数据...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="//unpkg.com/layui@2.12.1/dist/layui.js"></script>
+    <script>
+        layui.use([\'layer\', \'element\'], function(){
+            var layer = layui.layer;
+            var element = layui.element;
+            
+            // 显示欢迎消息
+            layer.msg(\'欢迎使用天罡 WAF Admin 管理控制台\', {icon: 6, time: 2000});
+            
+            // 加载数据
+            loadDashboardData();
+            
+            // 每5秒更新数据
+            setInterval(loadDashboardData, 5000);
+        });
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch("/admin/dashboard");
+                const data = await response.json();
+                
+                if (data.code === 0) {
+                    updateStats(data.data);
+                }
+            } catch (error) {
+                console.error("加载数据失败:", error);
+            }
+        }
+
+        function updateStats(data) {
+            document.getElementById("total-requests").textContent = data.overview?.total_requests || 0;
+            document.getElementById("blocked-requests").textContent = data.overview?.blocked_requests || 0;
+            document.getElementById("response-time").textContent = (data.performance?.avg_response_time || 0) + "ms";
+        }
+
+        function loadRules() {
+            layer.msg(\'正在加载规则管理...\', {icon: 1});
+        }
+
+        function loadLogs() {
+            layer.msg(\'正在加载日志查看...\', {icon: 1});
+        }
+
+        function exportData() {
+            layer.msg(\'正在导出数据...\', {icon: 1});
+        }
+
+        function systemStatus() {
+            layer.msg(\'正在检查系统状态...\', {icon: 1});
+        }
+    </script>
+</body>
+</html>';
+
+        return new Response(200, ['Content-Type' => 'text/html'], $html);
+    }
+
+    /**
+     * 处理 Admin API 请求
+     */
+    private function handleAdminApi(Request $request): Response
+    {
+        $path = $request->path();
+        
+        // 简单的API路由处理
+        if ($path === '/admin/api/dashboard') {
+            $data = $this->dashboardController->getDashboardData();
+            return new Response(200, ['Content-Type' => 'application/json'], json_encode([
+                'code' => 0,
+                'msg' => 'success',
+                'data' => $data
+            ]));
+        }
+        
+        return new Response(404, ['Content-Type' => 'application/json'], json_encode([
+            'code' => 404,
+            'msg' => 'API not found'
+        ]));
     }
 
     /**

@@ -315,6 +315,8 @@ class TiangangGateway
         $webPaths = [
             '/',
             '/dashboard',
+            '/admin',
+            '/admin/',
             '/api/dashboard',
             '/api/performance',
             '/api/security',
@@ -322,7 +324,9 @@ class TiangangGateway
             '/health'
         ];
         
-        return in_array($path, $webPaths) || str_starts_with($path, '/api/');
+        return in_array($path, $webPaths) || 
+               str_starts_with($path, '/api/') || 
+               str_starts_with($path, '/admin');
     }
 
     /**
