@@ -4,7 +4,7 @@ namespace app\admin\controller;
 
 use support\Request;
 use support\Response;
-use Tiangang\Waf\Web\Controllers\DashboardController;
+use app\admin\controller\DashboardController;
 
 /**
  * WAF 管理控制器

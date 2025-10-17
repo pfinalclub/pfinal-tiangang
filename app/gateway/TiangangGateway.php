@@ -9,7 +9,7 @@ use Tiangang\Waf\Config\ConfigManager;
 use Tiangang\Waf\Logging\LogCollector;
 use Tiangang\Waf\Proxy\ProxyHandler;
 use Tiangang\Waf\Proxy\BackendManager;
-use Tiangang\Waf\Web\Routes\WebRoutes;
+use app\admin\routes\AdminRoutes;
 use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep};
 
 /**
@@ -24,7 +24,7 @@ class TiangangGateway
     private LogCollector $logCollector;
     private ProxyHandler $proxyHandler;
     private BackendManager $backendManager;
-    private WebRoutes $webRoutes;
+    private AdminRoutes $adminRoutes;
     private array $config;
     
     public function __construct()
@@ -34,7 +34,7 @@ class TiangangGateway
         $this->logCollector = new LogCollector();
         $this->proxyHandler = new ProxyHandler();
         $this->backendManager = new BackendManager();
-        $this->webRoutes = new WebRoutes();
+        $this->adminRoutes = new AdminRoutes();
         $this->config = $this->configManager->get('waf');
     }
     
@@ -46,9 +46,9 @@ class TiangangGateway
         $startTime = microtime(true);
         
         try {
-            // 检查是否为Web管理界面请求
+            // 检查是否为管理界面请求
             if ($this->isWebRequest($request)) {
-                return $this->webRoutes->handleRequest($request);
+                return $this->adminRoutes->handleRequest($request);
             }
             
             // 检查 WAF 是否启用
@@ -307,7 +307,7 @@ class TiangangGateway
     }
     
     /**
-     * 检查是否为Web管理界面请求
+     * 检查是否为管理界面请求
      */
     private function isWebRequest(Request $request): bool
     {
