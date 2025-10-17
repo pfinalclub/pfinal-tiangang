@@ -34,7 +34,7 @@ class AsyncLogger
     /**
      * 异步记录日志
      */
-    public function log(string $level, string $message, array $context = []): void
+    public function log(string $level, string $message, array $context = []): \Generator
     {
         if (!$this->config['enabled'] ?? true) {
             return;
@@ -49,21 +49,56 @@ class AsyncLogger
             'memory_peak' => memory_get_peak_usage(true)
         ];
         
-        // 添加到队列
-        $this->logQueue[] = $logEntry;
-        
-        // 异步触发写入，不阻塞主流程
-        if (!$this->isFlushing && count($this->logQueue) >= ($this->config['batch_size'] ?? 10)) {
-            create_task($this->asyncFlush());
-        }
+        // 异步写入日志
+        yield $this->asyncWriteLog($logEntry);
     }
     
     /**
+     * 异步写入日志
+     */
+    private function asyncWriteLog(array $logEntry): \Generator
+    {
+        // 并发写入多个目标
+        yield \PfinalClub\Asyncio\gather([
+            $this->writeToFile($logEntry),
+            $this->writeToRedis($logEntry),
+            $this->writeToDatabase($logEntry)
+        ]);
+    }
+
+    /**
+     * 异步写入文件
+     */
+    private function writeToFile(array $logEntry): \Generator
+    {
+        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步文件写入
+        $this->logger->log($logEntry['level'], $logEntry['message'], $logEntry['context']);
+    }
+
+    /**
+     * 异步写入Redis
+     */
+    private function writeToRedis(array $logEntry): \Generator
+    {
+        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步Redis写入
+        $this->redis->lpush('waf_logs', json_encode($logEntry));
+    }
+
+    /**
+     * 异步写入数据库
+     */
+    private function writeToDatabase(array $logEntry): \Generator
+    {
+        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步数据库写入
+        // 这里可以添加数据库写入逻辑
+    }
+
+    /**
      * 记录请求日志
      */
-    public function logRequest(array $requestData, array $responseData, float $duration): void
+    public function logRequest(array $requestData, array $responseData, float $duration): \Generator
     {
-        $this->log('info', 'Request processed', [
+        yield $this->log('info', 'Request processed', [
             'request' => $requestData,
             'response' => $responseData,
             'duration' => $duration,

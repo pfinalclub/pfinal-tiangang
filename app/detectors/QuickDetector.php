@@ -25,7 +25,30 @@ class QuickDetector
     }
     
     /**
-     * 快速检测
+     * 异步快速检测
+     */
+    public function checkAsync(array $requestData): \Generator
+    {
+        // 并发执行多个检测
+        $results = yield \PfinalClub\Asyncio\gather([
+            $this->checkIpBlacklistAsync($requestData['ip']),
+            $this->checkBasicRegexAsync($requestData),
+            $this->checkRateLimitAsync($requestData)
+        ]);
+
+        // 合并结果
+        $allResults = array_merge($results[0], $results[1], $results[2]);
+        
+        if (empty($allResults)) {
+            return WafResult::allow();
+        }
+
+        // 返回第一个匹配的结果
+        return $allResults[0];
+    }
+
+    /**
+     * 快速检测（同步版本，保留兼容性）
      */
     public function check(array $requestData): WafResult
     {
@@ -208,6 +231,82 @@ class QuickDetector
         return ($ipLong & $maskLong) === ($subnetLong & $maskLong);
     }
     
+    /**
+     * 异步检查 IP 黑名单
+     */
+    private function checkIpBlacklistAsync(string $ip): \Generator
+    {
+        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步查询
+        
+        $blacklist = $this->getIpBlacklist();
+        
+        foreach ($blacklist as $blackIp) {
+            if ($this->matchIp($ip, $blackIp)) {
+                return [WafResult::block(
+                    'ip_blacklist',
+                    "IP {$ip} is in blacklist",
+                    403,
+                    ['ip' => $ip, 'blacklist_entry' => $blackIp]
+                )];
+            }
+        }
+        
+        return [];
+    }
+
+    /**
+     * 异步基础正则检查
+     */
+    private function checkBasicRegexAsync(array $requestData): \Generator
+    {
+        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步处理
+        
+        $patterns = $this->getBasicPatterns();
+        $content = json_encode($requestData);
+        
+        foreach ($patterns as $pattern => $rule) {
+            if (preg_match($pattern, $content)) {
+                return [WafResult::block(
+                    $rule,
+                    "Request matched pattern: {$pattern}",
+                    403,
+                    ['pattern' => $pattern, 'content' => $content]
+                )];
+            }
+        }
+        
+        return [];
+    }
+
+    /**
+     * 异步频率限制检查
+     */
+    private function checkRateLimitAsync(array $requestData): \Generator
+    {
+        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步Redis操作
+        
+        $ip = $requestData['ip'];
+        $key = "rate_limit:{$ip}";
+        $limit = $this->config['rules']['rate_limit']['max_requests'] ?? 100;
+        $window = $this->config['rules']['rate_limit']['window'] ?? 60;
+        
+        $current = $this->redis->incr($key);
+        if ($current === 1) {
+            $this->redis->expire($key, $window);
+        }
+        
+        if ($current > $limit) {
+            return [WafResult::block(
+                'rate_limit',
+                "Rate limit exceeded: {$current}/{$limit} requests per {$window}s",
+                429,
+                ['current' => $current, 'limit' => $limit, 'window' => $window]
+            )];
+        }
+        
+        return [];
+    }
+
     /**
      * 获取 Redis 客户端
      */

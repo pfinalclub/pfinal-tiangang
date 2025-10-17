@@ -29,7 +29,7 @@ $worker->onMessage = function ($connection, Request $request) {
         // 创建网关实例
         $gateway = new TiangangGateway();
         
-        // 处理请求
+        // 同步处理请求（稳定可靠）
         $response = $gateway->handle($request);
         
         // 发送响应
@@ -42,6 +42,7 @@ $worker->onMessage = function ($connection, Request $request) {
         ], json_encode([
             'error' => 'Internal Server Error',
             'message' => $e->getMessage(),
+            'timestamp' => time(),
         ]));
         
         $connection->send($errorResponse);

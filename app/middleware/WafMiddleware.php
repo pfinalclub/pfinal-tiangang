@@ -37,38 +37,49 @@ class WafMiddleware
      */
     public function process(Request $request): \Generator
     {
-        // 异步提取请求数据
-        $requestData = yield create_task($this->asyncExtractRequestData($request));
+        // 提取请求数据
+        $requestData = $this->extractRequestData($request);
 
         // 并发执行快速检测和异步检测
-        $tasks = [];
-        
-        if ($this->config['detection']['quick_enabled']) {
-            $tasks[] = create_task($this->asyncQuickDetect($requestData));
-        }
-        
-        if ($this->config['detection']['async_enabled']) {
-            $tasks[] = create_task($this->asyncDetect($requestData));
+        $results = yield \PfinalClub\Asyncio\gather([
+            $this->quickDetector->checkAsync($requestData),
+            $this->asyncDetector->check($requestData)
+        ]);
+
+        // 检查快速检测结果
+        $quickResult = $results[0];
+        if ($quickResult instanceof WafResult && $quickResult->isBlocked()) {
+            return $quickResult;
         }
 
-        if (empty($tasks)) {
-            return WafResult::allow();
+        // 检查异步检测结果
+        $asyncResults = $results[1];
+        if (!empty($asyncResults)) {
+            return $this->decisionEngine->evaluate($asyncResults);
         }
 
-        // 并发等待所有检测完成，设置超时
-        $timeout = $this->config['detection']['timeout'] ?? 5.0;
-        try {
-            $results = yield wait_for(gather(...$tasks), $timeout);
-            return $this->decisionEngine->evaluate($results);
-        } catch (\PfinalClub\Asyncio\TimeoutException $e) {
-            // 超时情况下，记录日志但放行
-            logger('warning', 'WAF detection timeout', [
-                'timeout' => $timeout,
-                'url' => $request->path()
-            ]);
-            return WafResult::allow();
-        }
+        // 没有检测到威胁，放行
+        return WafResult::allow();
     }
+
+    /**
+     * 同步提取请求数据
+     */
+    private function extractRequestData(Request $request): array
+    {
+        return [
+            'ip' => $this->getRealIp($request),
+            'uri' => $request->path(),
+            'method' => $request->method(),
+            'headers' => $request->header(),
+            'query' => $request->get(),
+            'post' => $request->post(),
+            'user_agent' => $request->header('User-Agent', ''),
+            'referer' => $request->header('Referer', ''),
+            'timestamp' => time(),
+        ];
+    }
+
     
     /**
      * 异步提取请求数据
@@ -126,25 +137,6 @@ class WafMiddleware
         }
         
         return $results;
-    }
-    
-    /**
-     * 提取请求数据（同步版本，保留兼容性）
-     */
-    private function extractRequestData(Request $request): array
-    {
-        return [
-            'ip' => $this->getRealIp($request),
-            'uri' => $request->path(),
-            'method' => $request->method(),
-            'headers' => $request->header(),
-            'query' => $request->get(),
-            'post' => $request->post(),
-            'cookies' => $request->cookie(),
-            'user_agent' => $request->header('User-Agent', ''),
-            'referer' => $request->header('Referer', ''),
-            'timestamp' => time(),
-        ];
     }
     
     /**

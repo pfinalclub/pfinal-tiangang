@@ -36,9 +36,9 @@ class TiangangGateway
     }
     
     /**
-     * 异步处理 HTTP 请求
+     * 混合模式处理 HTTP 请求（核心同步 + 后台异步）
      */
-    public function handle(Request $request): \Generator
+    public function handle(Request $request): Response
     {
         $startTime = microtime(true);
         
@@ -48,31 +48,125 @@ class TiangangGateway
                 return $this->createPassThroughResponse($request);
             }
             
-            // 异步 WAF 检测
-            $wafResult = yield create_task($this->wafMiddleware->process($request));
+            // 同步 WAF 检测（核心功能，必须同步）
+            $wafResult = $this->wafMiddleware->processSync($request);
             
-            // 异步记录日志
-            create_task($this->asyncLogRequest($request, $wafResult, microtime(true) - $startTime));
-            
-            // 根据检测结果处理
             if ($wafResult->isBlocked()) {
+                // 异步记录安全日志（后台任务）
+                $this->queueAsyncLog($request, $wafResult, microtime(true) - $startTime);
                 return $this->createBlockResponse($wafResult);
             }
             
-            // 异步代理转发
-            $response = yield create_task($this->asyncProxyRequest($request));
+            // 同步代理转发（核心功能，必须同步）
+            $response = $this->proxyRequest($request);
+            
+            // 异步记录成功日志（后台任务）
+            $this->queueAsyncLog($request, $wafResult, microtime(true) - $startTime);
             
             return $response;
             
         } catch (\Exception $e) {
-            // 异步记录错误日志
-            create_task($this->asyncLogError($request, $e));
+            // 异步记录错误日志（后台任务）
+            $this->queueAsyncErrorLog($request, $e);
             
             // 返回错误响应
             return $this->createErrorResponse($e);
         }
     }
     
+    /**
+     * 同步代理请求
+     */
+    private function proxyRequest(Request $request): Response
+    {
+        try {
+            // 获取后端配置
+            $backend = $this->backendManager->getAvailableBackend();
+            if (!$backend) {
+                return $this->createErrorResponse(new \Exception('No available backend'));
+            }
+            
+            // 构建目标 URL
+            $targetUrl = $backend['url'] . $request->path();
+            if (!empty($request->get())) {
+                $targetUrl .= '?' . http_build_query($request->get());
+            }
+            
+            // 构建请求选项
+            $options = [
+                'headers' => $request->header(),
+                'body' => $request->rawBody(),
+                'timeout' => 30,
+                'http_errors' => false
+            ];
+            
+            // 发送 HTTP 请求
+            $response = $this->httpClient->request($request->method(), $targetUrl, $options);
+            
+            // 构建响应
+            return new Response(
+                $response->getStatusCode(),
+                $response->getHeaders(),
+                $response->getBody()->getContents()
+            );
+            
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($e);
+        }
+    }
+    
+    /**
+     * 异步记录日志
+     */
+    private function asyncLog(Request $request, $wafResult, float $duration): \Generator
+    {
+        yield $this->logCollector->log($request, $wafResult, $duration);
+    }
+    
+    /**
+     * 异步记录错误日志
+     */
+    private function asyncErrorLog(Request $request, \Exception $e): \Generator
+    {
+        yield $this->logCollector->logError($request, $e);
+    }
+
+    /**
+     * 异步记录日志（后台任务）
+     */
+    private function queueAsyncLog(Request $request, $wafResult, float $duration): void
+    {
+        // 使用 Workerman 的异步任务处理
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        
+        try {
+            $this->logCollector->log($request, $wafResult, $duration);
+        } catch (\Exception $e) {
+            // 日志记录失败不应该影响主流程
+            error_log('WAF log error: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 异步记录错误日志（后台任务）
+     */
+    private function queueAsyncErrorLog(Request $request, \Exception $e): void
+    {
+        // 使用 Workerman 的异步任务处理
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        
+        try {
+            $this->logCollector->logError($request, $e);
+        } catch (\Exception $logError) {
+            // 错误日志记录失败不应该影响主流程
+            error_log('WAF error log failed: ' . $logError->getMessage());
+        }
+    }
+
     /**
      * 异步代理请求到后端
      */
@@ -163,40 +257,6 @@ class TiangangGateway
         $this->logCollector->logError($request, $e);
     }
     
-    /**
-     * 代理请求到后端（同步版本，保留兼容性）
-     */
-    private function proxyRequest(Request $request): Response
-    {
-        try {
-            // 获取可用的后端
-            $backend = $this->backendManager->getAvailableBackend();
-            if (!$backend) {
-                return $this->createServiceUnavailableResponse();
-            }
-            
-            // 增加连接计数
-            $this->backendManager->incrementConnections($backend['name']);
-            
-            try {
-                // 转发请求
-                $response = $this->proxyHandler->forward($request);
-                return $response;
-            } finally {
-                // 减少连接计数
-                $this->backendManager->decrementConnections($backend['name']);
-            }
-            
-        } catch (\Exception $e) {
-            logger('error', 'Proxy request failed', [
-                'url' => $request->path(),
-                'method' => $request->method(),
-                'error' => $e->getMessage()
-            ]);
-            
-            return $this->createServiceUnavailableResponse();
-        }
-    }
     
     /**
      * 创建服务不可用响应
@@ -240,6 +300,20 @@ class TiangangGateway
         ], json_encode([
             'error' => 'Internal Server Error',
             'message' => $e->getMessage(),
+            'timestamp' => time(),
+        ]));
+    }
+    
+    /**
+     * 创建透传响应（WAF 未启用时）
+     */
+    private function createPassThroughResponse(Request $request): Response
+    {
+        // 当 WAF 未启用时，直接透传请求
+        return new Response(200, [
+            'Content-Type' => 'application/json',
+        ], json_encode([
+            'message' => 'WAF is disabled, request passed through',
             'timestamp' => time(),
         ]));
     }
