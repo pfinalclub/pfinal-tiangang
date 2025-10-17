@@ -23,7 +23,17 @@ class AsyncCacheManager
     public function __construct()
     {
         $this->configManager = new ConfigManager();
-        $this->config = $this->configManager->get('cache');
+        $this->config = $this->configManager->get('cache') ?? [
+            'enabled' => true,
+            'driver' => 'redis',
+            'ttl' => 3600,
+            'prefix' => 'waf_cache:',
+            'local_cache' => [
+                'enabled' => true,
+                'size' => 1000,
+                'ttl' => 300
+            ]
+        ];
         
         try {
             $redisConfig = $this->configManager->get('database.redis');

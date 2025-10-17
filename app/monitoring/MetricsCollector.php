@@ -13,7 +13,7 @@ use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep};
  */
 class MetricsCollector
 {
-    private RedisClient $redis;
+    private ?RedisClient $redis;
     private ConfigManager $configManager;
     private array $config;
     private array $metrics = [];
@@ -22,8 +22,17 @@ class MetricsCollector
     public function __construct()
     {
         $this->configManager = new ConfigManager();
-        $this->config = $this->configManager->get('monitoring');
-        $this->redis = $this->getRedisClient();
+        $this->config = $this->configManager->get('monitoring') ?? [
+            'enabled' => true,
+            'metrics_interval' => 60,
+            'retention_days' => 7
+        ];
+        
+        try {
+            $this->redis = $this->getRedisClient();
+        } catch (\Exception $e) {
+            $this->redis = null;
+        }
     }
     
     /**

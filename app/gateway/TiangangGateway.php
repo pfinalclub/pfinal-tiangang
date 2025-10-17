@@ -9,6 +9,7 @@ use Tiangang\Waf\Config\ConfigManager;
 use Tiangang\Waf\Logging\LogCollector;
 use Tiangang\Waf\Proxy\ProxyHandler;
 use Tiangang\Waf\Proxy\BackendManager;
+use Tiangang\Waf\Web\Routes\WebRoutes;
 use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep};
 
 /**
@@ -23,6 +24,7 @@ class TiangangGateway
     private LogCollector $logCollector;
     private ProxyHandler $proxyHandler;
     private BackendManager $backendManager;
+    private WebRoutes $webRoutes;
     private array $config;
     
     public function __construct()
@@ -32,6 +34,7 @@ class TiangangGateway
         $this->logCollector = new LogCollector();
         $this->proxyHandler = new ProxyHandler();
         $this->backendManager = new BackendManager();
+        $this->webRoutes = new WebRoutes();
         $this->config = $this->configManager->get('waf');
     }
     
@@ -43,6 +46,11 @@ class TiangangGateway
         $startTime = microtime(true);
         
         try {
+            // 检查是否为Web管理界面请求
+            if ($this->isWebRequest($request)) {
+                return $this->webRoutes->handleRequest($request);
+            }
+            
             // 检查 WAF 是否启用
             if (!$this->config['enabled']) {
                 return $this->createPassThroughResponse($request);
@@ -58,7 +66,7 @@ class TiangangGateway
             }
             
             // 同步代理转发（核心功能，必须同步）
-            $response = $this->proxyRequest($request);
+            $response = $this->proxyHandler->forwardSync($request);
             
             // 异步记录成功日志（后台任务）
             $this->queueAsyncLog($request, $wafResult, microtime(true) - $startTime);
@@ -131,41 +139,7 @@ class TiangangGateway
         yield $this->logCollector->logError($request, $e);
     }
 
-    /**
-     * 异步记录日志（后台任务）
-     */
-    private function queueAsyncLog(Request $request, $wafResult, float $duration): void
-    {
-        // 使用 Workerman 的异步任务处理
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        }
-        
-        try {
-            $this->logCollector->log($request, $wafResult, $duration);
-        } catch (\Exception $e) {
-            // 日志记录失败不应该影响主流程
-            error_log('WAF log error: ' . $e->getMessage());
-        }
-    }
     
-    /**
-     * 异步记录错误日志（后台任务）
-     */
-    private function queueAsyncErrorLog(Request $request, \Exception $e): void
-    {
-        // 使用 Workerman 的异步任务处理
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        }
-        
-        try {
-            $this->logCollector->logError($request, $e);
-        } catch (\Exception $logError) {
-            // 错误日志记录失败不应该影响主流程
-            error_log('WAF error log failed: ' . $logError->getMessage());
-        }
-    }
 
     /**
      * 异步代理请求到后端
@@ -304,6 +278,53 @@ class TiangangGateway
         ]));
     }
     
+    /**
+     * 异步记录日志（后台任务）
+     */
+    private function queueAsyncLog(Request $request, \Tiangang\Waf\Core\WafResult $wafResult, float $duration): void
+    {
+        // 使用 fastcgi_finish_request 在响应发送后执行
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        
+        // 在后台异步记录日志
+        \PfinalClub\Asyncio\run($this->asyncLog($request, $wafResult, $duration));
+    }
+    
+    /**
+     * 异步记录错误日志（后台任务）
+     */
+    private function queueAsyncErrorLog(Request $request, \Exception $e): void
+    {
+        // 使用 fastcgi_finish_request 在响应发送后执行
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        
+        // 在后台异步记录错误日志
+        \PfinalClub\Asyncio\run($this->asyncErrorLog($request, $e));
+    }
+    
+    /**
+     * 检查是否为Web管理界面请求
+     */
+    private function isWebRequest(Request $request): bool
+    {
+        $path = $request->path();
+        $webPaths = [
+            '/',
+            '/dashboard',
+            '/api/dashboard',
+            '/api/performance',
+            '/api/security',
+            '/api/export',
+            '/health'
+        ];
+        
+        return in_array($path, $webPaths) || str_starts_with($path, '/api/');
+    }
+
     /**
      * 创建透传响应（WAF 未启用时）
      */

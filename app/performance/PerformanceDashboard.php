@@ -15,8 +15,8 @@ use Tiangang\Waf\Database\AsyncDatabaseManager;
 class PerformanceDashboard
 {
     private ConfigManager $configManager;
-    private AsyncCacheManager $cacheManager;
-    private AsyncDatabaseManager $dbManager;
+    private ?AsyncCacheManager $cacheManager;
+    private ?AsyncDatabaseManager $dbManager;
     private PerformanceAnalyzer $analyzer;
     private PerformanceTracker $tracker;
     private array $config;
@@ -24,11 +24,23 @@ class PerformanceDashboard
     public function __construct()
     {
         $this->configManager = new ConfigManager();
-        $this->cacheManager = new AsyncCacheManager();
-        $this->dbManager = new AsyncDatabaseManager();
+        
+        // 延迟初始化数据库和缓存组件，避免连接问题
+        try {
+            $this->cacheManager = new AsyncCacheManager();
+            $this->dbManager = new AsyncDatabaseManager();
+        } catch (\Exception $e) {
+            $this->cacheManager = null;
+            $this->dbManager = null;
+        }
+        
         $this->analyzer = new PerformanceAnalyzer();
         $this->tracker = new PerformanceTracker();
-        $this->config = $this->configManager->get('performance');
+        $this->config = $this->configManager->get('performance') ?? [
+            'enabled' => true,
+            'metrics_interval' => 60,
+            'retention_days' => 30
+        ];
     }
 
     /**

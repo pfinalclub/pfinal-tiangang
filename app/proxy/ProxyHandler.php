@@ -31,7 +31,43 @@ class ProxyHandler
     }
     
     /**
-     * 异步转发请求到后端
+     * 同步转发请求到后端（混合架构核心）
+     */
+    public function forwardSync(Request $request): Response
+    {
+        $startTime = microtime(true);
+        
+        try {
+            // 构建目标 URL
+            $targetUrl = $this->buildTargetUrl($request);
+            
+            // 构建请求选项
+            $options = $this->buildRequestOptions($request);
+            
+            // 发送请求
+            $response = $this->httpClient->request(
+                $request->method(),
+                $targetUrl,
+                $options
+            );
+            
+            // 处理响应
+            $proxyResponse = $this->processResponse($response, $request);
+            
+            // 异步记录性能指标（后台任务）
+            $this->queueAsyncLogPerformance($request, $proxyResponse, microtime(true) - $startTime);
+            
+            return $proxyResponse;
+            
+        } catch (RequestException $e) {
+            return $this->handleProxyError($e, $request);
+        } catch (\Exception $e) {
+            return $this->handleUnexpectedError($e, $request);
+        }
+    }
+
+    /**
+     * 异步转发请求到后端（保留用于后台任务）
      */
     public function forward(Request $request): \Generator
     {
@@ -442,6 +478,20 @@ class ProxyHandler
         ];
     }
     
+    /**
+     * 异步记录性能指标（后台任务）
+     */
+    private function queueAsyncLogPerformance(Request $request, Response $response, float $duration): void
+    {
+        // 使用 fastcgi_finish_request 在响应发送后执行
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        
+        // 在后台异步记录性能指标
+        \PfinalClub\Asyncio\run($this->asyncLogPerformance($request, $response, $duration));
+    }
+
     /**
      * 创建 HTTP 客户端
      */

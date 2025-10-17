@@ -33,7 +33,31 @@ class WafMiddleware
     }
     
     /**
-     * 异步处理请求
+     * 同步处理请求（混合架构核心）
+     */
+    public function processSync(Request $request): WafResult
+    {
+        // 提取请求数据
+        $requestData = $this->extractRequestData($request);
+
+        // 快速检测（同步）
+        $quickResult = $this->quickDetector->check($requestData);
+        if ($quickResult->isBlocked()) {
+            return $quickResult;
+        }
+
+        // 异步检测（同步调用，但内部可能使用异步）
+        $asyncResults = $this->asyncDetector->detectSync($requestData);
+        if (!empty($asyncResults)) {
+            return $this->decisionEngine->evaluate($asyncResults);
+        }
+
+        // 没有检测到威胁，放行
+        return WafResult::allow();
+    }
+
+    /**
+     * 异步处理请求（保留用于后台任务）
      */
     public function process(Request $request): \Generator
     {
