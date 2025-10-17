@@ -40,9 +40,16 @@ class AuthController
         // 验证用户名和密码
         if ($this->validateCredentials($username, $password)) {
             // 创建会话
-            $this->createSession($request, $username, $remember);
+            $sessionId = $this->createSession($request, $username, $remember);
             
-            return new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            // 设置Cookie头
+            $expires = $remember ? time() + (30 * 24 * 3600) : time() + (24 * 3600);
+            $cookieValue = "waf_session={$sessionId}; Path=/; HttpOnly; Max-Age=" . ($expires - time());
+            
+            return new Response(200, [
+                'Content-Type' => 'application/json',
+                'Set-Cookie' => $cookieValue
+            ], json_encode([
                 'code' => 0,
                 'msg' => '登录成功',
                 'data' => ['redirect' => '/admin/dashboard']
@@ -62,7 +69,13 @@ class AuthController
     {
         $this->destroySession($request);
         
-        return new Response(302, ['Location' => '/admin/login'], '');
+        // 清除Cookie
+        $clearCookie = "waf_session=; Path=/; HttpOnly; Max-Age=0";
+        
+        return new Response(302, [
+            'Location' => '/admin/login',
+            'Set-Cookie' => $clearCookie
+        ], '');
     }
 
     /**
@@ -102,7 +115,7 @@ class AuthController
     /**
      * 创建用户会话
      */
-    private function createSession(Request $request, string $username, bool $remember = false): void
+    private function createSession(Request $request, string $username, bool $remember = false): string
     {
         $sessionId = $this->generateSessionId();
         $expires = $remember ? time() + (30 * 24 * 3600) : time() + (24 * 3600); // 30天或1天
@@ -117,16 +130,10 @@ class AuthController
 
         $this->saveSessionData($sessionId, $sessionData);
 
-        // 设置Cookie
-        $cookieOptions = [
-            'expires' => $expires,
-            'path' => '/',
-            'httponly' => true,
-            'secure' => false, // 生产环境应该设为true
-            'samesite' => 'Lax'
-        ];
-
-        setcookie('waf_session', $sessionId, $cookieOptions);
+        // 在 Workerman 环境中，Cookie 通过 Response 头设置
+        // 这里只是保存会话数据，Cookie 会在响应中设置
+        
+        return $sessionId;
     }
 
     /**
@@ -139,8 +146,7 @@ class AuthController
             $this->deleteSessionData($sessionId);
         }
 
-        // 清除Cookie
-        setcookie('waf_session', '', time() - 3600, '/');
+        // Cookie 清除通过 Response 头处理
     }
 
     /**

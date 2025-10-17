@@ -58,7 +58,7 @@ class TiangangGateway
             }
             
             // 检查 WAF 是否启用
-            if (!$this->config['enabled']) {
+            if (!($this->config['enabled'] ?? true)) {
                 return $this->createPassThroughResponse($request);
             }
             
@@ -132,7 +132,7 @@ class TiangangGateway
     /**
      * 异步记录日志
      */
-    private function asyncLog(Request $request, $wafResult, float $duration): \Generator
+    private function asyncLog(Request $request, \app\waf\core\WafResult $wafResult, float $duration): \Generator
     {
         yield $this->logCollector->log($request, $wafResult, $duration);
     }
@@ -218,7 +218,7 @@ class TiangangGateway
     /**
      * 异步记录请求日志
      */
-    private function asyncLogRequest(Request $request, $wafResult, float $duration): \Generator
+    private function asyncLogRequest(Request $request, \app\waf\core\WafResult $wafResult, float $duration): \Generator
     {
         // 模拟异步日志记录
         yield sleep(0.001);
@@ -287,7 +287,7 @@ class TiangangGateway
     /**
      * 异步记录日志（后台任务）
      */
-    private function queueAsyncLog(Request $request, \Tiangang\Waf\Core\WafResult $wafResult, float $duration): void
+    private function queueAsyncLog(Request $request, \app\waf\core\WafResult $wafResult, float $duration): void
     {
         // 使用 fastcgi_finish_request 在响应发送后执行
         if (function_exists('fastcgi_finish_request')) {

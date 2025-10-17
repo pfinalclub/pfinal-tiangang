@@ -52,13 +52,14 @@ class AdminRoutes
             '/dashboard' => $this->handleDashboard($request),
             '/admin' => $this->handleAdminDashboard($request),
             '/admin/' => $this->handleAdminDashboard($request),
+            '/admin/dashboard' => $this->handleAdminDashboard($request),
             
             // API接口
             '/api/dashboard' => $this->handleApiDashboard($request),
             '/api/performance' => $this->handleApiPerformance($request),
             '/api/security' => $this->handleApiSecurity($request),
             '/api/export' => $this->handleApiExport($request),
-            '/admin/dashboard' => $this->handleAdminApiDashboard($request),
+            '/admin/api/dashboard' => $this->handleAdminApiDashboard($request),
             '/admin/performance' => $this->handleAdminApiPerformance($request),
             '/admin/security' => $this->handleAdminApiSecurity($request),
             '/admin/export' => $this->handleAdminApiExport($request),
@@ -807,7 +808,7 @@ class AdminRoutes
 
         async function loadDashboardData() {
             try {
-                const response = await fetch("/admin/dashboard");
+                const response = await fetch("/admin/api/dashboard");
                 const data = await response.json();
                 
                 if (data.code === 0) {
