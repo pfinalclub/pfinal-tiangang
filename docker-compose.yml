@@ -1,0 +1,178 @@
+version: '3.8'
+
+services:
+  # 天罡 WAF 主服务
+  tiangang:
+    build: .
+    container_name: tiangang-waf
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - APP_ENV=production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=tiangang
+      - DB_USER=tiangang
+      - DB_PASSWORD=tiangang_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redis_password
+    volumes:
+      - ./logs:/var/log/tiangang
+      - ./cache:/var/cache/tiangang
+      - ./config:/var/www/html/config
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - tiangang-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: tiangang-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=tiangang
+      - MYSQL_USER=tiangang
+      - MYSQL_PASSWORD=tiangang_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - tiangang-network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: tiangang-redis
+    command: redis-server --requirepass redis_password
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - tiangang-network
+    restart: unless-stopped
+
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: tiangang-nginx
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - tiangang
+    networks:
+      - tiangang-network
+    restart: unless-stopped
+
+  # 监控服务
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tiangang-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - tiangang-network
+    restart: unless-stopped
+
+  # Grafana 仪表板
+  grafana:
+    image: grafana/grafana:latest
+    container_name: tiangang-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - tiangang-network
+    restart: unless-stopped
+
+  # 日志收集
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: tiangang-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - tiangang-network
+    restart: unless-stopped
+
+  # Kibana 日志分析
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: tiangang-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - tiangang-network
+    restart: unless-stopped
+
+  # 文件日志收集
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.8.0
+    container_name: tiangang-filebeat
+    user: root
+    volumes:
+      - ./docker/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs:/var/log/tiangang:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - tiangang-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:
+
+networks:
+  tiangang-network:
+    driver: bridge
