@@ -1,0 +1,52 @@
+# XSS 攻击检测规则配置
+name: xss
+enabled: true
+priority: 70
+description: "跨站脚本攻击检测规则"
+
+# 检测模式
+patterns:
+  - pattern: '/(<script[^>]*>.*?<\/script>)/is'
+    description: "Script 标签注入"
+    severity: high
+    
+  - pattern: '/(javascript\s*:)/i'
+    description: "JavaScript 协议"
+    severity: high
+    
+  - pattern: '/(on\w+\s*=)/i'
+    description: "事件处理器"
+    severity: high
+    
+  - pattern: '/(<iframe[^>]*>)/i'
+    description: "iframe 标签注入"
+    severity: medium
+    
+  - pattern: '/(<object[^>]*>)/i'
+    description: "object 标签注入"
+    severity: medium
+    
+  - pattern: '/(<embed[^>]*>)/i'
+    description: "embed 标签注入"
+    severity: medium
+    
+  - pattern: '/(<link[^>]*>)/i'
+    description: "link 标签注入"
+    severity: low
+    
+  - pattern: '/(<meta[^>]*>)/i'
+    description: "meta 标签注入"
+    severity: low
+
+# 检测字段
+fields:
+  - query
+  - post
+  - headers
+  - cookies
+
+# 白名单（不检测的字段）
+whitelist:
+  - headers.user-agent
+  - headers.accept
+  - headers.accept-language

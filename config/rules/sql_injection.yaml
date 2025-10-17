@@ -1,0 +1,56 @@
+# SQL 注入检测规则配置
+name: sql_injection
+enabled: true
+priority: 80
+description: "SQL 注入攻击检测规则"
+
+# 检测模式
+patterns:
+  - pattern: '/(union\s+select)/i'
+    description: "UNION SELECT 攻击"
+    severity: high
+    
+  - pattern: '/(select\s+.*\s+from)/i'
+    description: "SELECT 查询攻击"
+    severity: high
+    
+  - pattern: '/(insert\s+into)/i'
+    description: "INSERT 注入攻击"
+    severity: high
+    
+  - pattern: '/(delete\s+from)/i'
+    description: "DELETE 注入攻击"
+    severity: high
+    
+  - pattern: '/(drop\s+table)/i'
+    description: "DROP TABLE 攻击"
+    severity: critical
+    
+  - pattern: '/(sleep\s*\()/i'
+    description: "SLEEP 时间盲注"
+    severity: high
+    
+  - pattern: '/(benchmark\s*\()/i'
+    description: "BENCHMARK 时间盲注"
+    severity: high
+    
+  - pattern: '/(or\s+1\s*=\s*1)/i'
+    description: "OR 1=1 逻辑攻击"
+    severity: high
+    
+  - pattern: '/(and\s+1\s*=\s*1)/i'
+    description: "AND 1=1 逻辑攻击"
+    severity: medium
+
+# 检测字段
+fields:
+  - query
+  - post
+  - headers
+  - cookies
+
+# 白名单（不检测的字段）
+whitelist:
+  - headers.user-agent
+  - headers.accept
+  - headers.accept-language

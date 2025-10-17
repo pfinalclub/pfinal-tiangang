@@ -1,0 +1,38 @@
+# IP 黑名单规则配置
+name: ip_blacklist
+enabled: true
+priority: 100
+description: "IP 黑名单规则"
+
+# 黑名单 IP
+blacklist:
+  # 单个 IP
+  - "192.168.1.100"
+  - "10.0.0.50"
+  
+  # CIDR 网段
+  - "192.168.1.0/24"
+  - "10.0.0.0/8"
+  
+  # 国家代码（需要 GeoIP 支持）
+  # - "CN"
+  # - "RU"
+
+# 白名单 IP（优先级高于黑名单）
+whitelist:
+  - "127.0.0.1"
+  - "::1"
+  - "192.168.1.1"
+
+# 动态黑名单（基于行为）
+dynamic_blacklist:
+  enabled: true
+  threshold: 10  # 触发阈值
+  window: 300    # 时间窗口（秒）
+  duration: 3600 # 封禁时长（秒）
+
+# 响应配置
+response:
+  status_code: 403
+  message: "Access Denied"
+  custom_page: false

@@ -1,0 +1,38 @@
+# Dependencies
+/vendor/
+composer.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+/logs/*.log
+/logs/*.txt
+!/logs/.gitkeep
+
+# Runtime
+/runtime/*.pid
+!/runtime/.gitkeep
+
+# Storage
+/storage/*
+!/storage/.gitkeep
+
+# Test Coverage
+/coverage/
+.phpunit.result.cache
+
+# Environment
+.env
+.env.local
+.ruler/
+# Cursor
+.cursorrules

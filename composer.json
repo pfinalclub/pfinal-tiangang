@@ -1,0 +1,39 @@
+{
+    "name": "tiangang/waf",
+    "description": "天罡 WAF - 基于 Workerman 的高性能 Web 应用防火墙",
+    "type": "project",
+    "require": {
+        "php": ">=8.3",
+        "pfinalclub/asyncio": "^1.0",
+        "workerman/workerman": "^4.1",
+        "symfony/yaml": "^6.0",
+        "predis/predis": "^2.0",
+        "monolog/monolog": "^3.0",
+        "vlucas/phpdotenv": "^5.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tiangang\\Waf\\": "app/"
+        },
+        "files": [
+            "app/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tiangang\\Waf\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "start": "php start.php start",
+        "stop": "php start.php stop",
+        "restart": "php start.php restart",
+        "reload": "php start.php reload",
+        "status": "php start.php status"
+    }
+}
+

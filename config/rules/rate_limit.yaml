@@ -1,0 +1,45 @@
+# 频率限制规则配置
+name: rate_limit
+enabled: true
+priority: 90
+description: "请求频率限制规则"
+
+# 限流配置
+limits:
+  # 基于 IP 的限流
+  ip:
+    max_requests: 100
+    window: 60  # 秒
+    burst: 20   # 突发请求数
+    
+  # 基于用户的限流
+  user:
+    max_requests: 200
+    window: 60
+    burst: 50
+    
+  # 基于路径的限流
+  path:
+    max_requests: 50
+    window: 60
+    burst: 10
+
+# 限流策略
+strategy: sliding_window  # fixed_window, sliding_window, token_bucket
+
+# 限流键生成
+key_generators:
+  - ip
+  - ip_path
+  - user_agent
+
+# 白名单 IP（不受限流影响）
+whitelist_ips:
+  - 127.0.0.1
+  - ::1
+
+# 限流响应
+response:
+  status_code: 429
+  message: "Too Many Requests"
+  retry_after: 60
