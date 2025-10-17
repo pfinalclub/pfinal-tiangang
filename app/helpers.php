@@ -1,44 +1,39 @@
 <?php
 
-use Tiangang\Waf\Config\ConfigManager;
-
 /**
- * 获取配置
+ * 获取运行时路径
  */
-function config(string $key, mixed $default = null): mixed
+function runtime_path(string $path = ''): string
 {
-    static $configManager = null;
+    $runtimePath = __DIR__ . '/../runtime';
     
-    if ($configManager === null) {
-        $configManager = new ConfigManager();
+    if ($path) {
+        return $runtimePath . '/' . ltrim($path, '/');
     }
     
-    return $configManager->get($key, $default);
+    return $runtimePath;
 }
 
 /**
- * 获取环境变量
+ * 获取配置值
  */
-function env(string $key, mixed $default = null): mixed
+function config(string $key, $default = null)
 {
-    $value = $_ENV[$key] ?? $_SERVER[$key] ?? $default;
+    static $config = null;
     
-    // 类型转换
-    if (is_string($value)) {
-        switch (strtolower($value)) {
-            case 'true':
-            case '(true)':
-                return true;
-            case 'false':
-            case '(false)':
-                return false;
-            case 'empty':
-            case '(empty)':
-                return '';
-            case 'null':
-            case '(null)':
-                return null;
+    if ($config === null) {
+        $configManager = new \Tiangang\Waf\Config\ConfigManager();
+        $config = $configManager->all();
+    }
+    
+    $keys = explode('.', $key);
+    $value = $config;
+    
+    foreach ($keys as $k) {
+        if (!isset($value[$k])) {
+            return $default;
         }
+        $value = $value[$k];
     }
     
     return $value;
@@ -49,41 +44,158 @@ function env(string $key, mixed $default = null): mixed
  */
 function logger(string $level, string $message, array $context = []): void
 {
-    $logFile = __DIR__ . '/../runtime/logs/app.log';
-    $timestamp = date('Y-m-d H:i:s');
-    $logEntry = "[{$timestamp}] {$level}: {$message} " . json_encode($context) . PHP_EOL;
+    static $logger = null;
     
-    file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
+    if ($logger === null) {
+        $logger = new \Tiangang\Waf\Logging\AsyncLogger();
+    }
+    
+    $logger->log($level, $message, $context);
 }
 
 /**
- * 获取基础路径
+ * 获取环境变量
  */
-function base_path(string $path = ''): string
+function env(string $key, $default = null)
 {
-    return __DIR__ . '/../' . ltrim($path, '/');
+    $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+    
+    if ($value === false) {
+        return $default;
+    }
+    
+    // 转换布尔值
+    if (in_array(strtolower($value), ['true', '1', 'yes', 'on'])) {
+        return true;
+    }
+    
+    if (in_array(strtolower($value), ['false', '0', 'no', 'off'])) {
+        return false;
+    }
+    
+    return $value;
 }
 
 /**
- * 获取运行时路径
+ * 格式化字节大小
  */
-function runtime_path(string $path = ''): string
+function format_bytes(int $bytes): string
 {
-    return base_path('runtime/' . ltrim($path, '/'));
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $bytes = max($bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
+    
+    $bytes /= pow(1024, $pow);
+    
+    return round($bytes, 2) . ' ' . $units[$pow];
 }
 
 /**
- * 获取配置路径
+ * 格式化时间
  */
-function config_path(string $path = ''): string
+function format_duration(float $seconds): string
 {
-    return base_path('config/' . ltrim($path, '/'));
+    if ($seconds < 0.001) {
+        return round($seconds * 1000000) . 'μs';
+    } elseif ($seconds < 1) {
+        return round($seconds * 1000) . 'ms';
+    } else {
+        return round($seconds, 2) . 's';
+    }
 }
 
 /**
- * 获取插件路径
+ * 生成唯一ID
  */
-function plugin_path(string $path = ''): string
+function generate_id(): string
 {
-    return base_path('plugins/' . ltrim($path, '/'));
+    return uniqid('tiangang_', true);
+}
+
+/**
+ * 获取客户端IP
+ */
+function get_client_ip(): string
+{
+    $headers = [
+        'HTTP_X_FORWARDED_FOR',
+        'HTTP_X_REAL_IP',
+        'HTTP_CLIENT_IP',
+        'REMOTE_ADDR'
+    ];
+    
+    foreach ($headers as $header) {
+        if (!empty($_SERVER[$header])) {
+            $ips = explode(',', $_SERVER[$header]);
+            $ip = trim($ips[0]);
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return $ip;
+            }
+        }
+    }
+    
+    return '127.0.0.1';
+}
+
+/**
+ * 检查是否为内部IP
+ */
+function is_internal_ip(string $ip): bool
+{
+    return !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+}
+
+/**
+ * 获取当前时间戳（微秒）
+ */
+function microtime_float(): float
+{
+    return microtime(true);
+}
+
+/**
+ * 安全地序列化数据
+ */
+function safe_serialize($data): string
+{
+    return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+}
+
+/**
+ * 安全地反序列化数据
+ */
+function safe_unserialize(string $data)
+{
+    return json_decode($data, true);
+}
+
+/**
+ * 清理敏感数据
+ */
+function sanitize_data(array $data, array $sensitiveFields = []): array
+{
+    $defaultSensitiveFields = [
+        'password',
+        'token',
+        'authorization',
+        'cookie',
+        'x-api-key',
+        'secret',
+        'key'
+    ];
+    
+    $sensitiveFields = array_merge($defaultSensitiveFields, $sensitiveFields);
+    
+    foreach ($data as $key => $value) {
+        $lowerKey = strtolower($key);
+        
+        if (in_array($lowerKey, $sensitiveFields)) {
+            $data[$key] = '***';
+        } elseif (is_array($value)) {
+            $data[$key] = sanitize_data($value, $sensitiveFields);
+        }
+    }
+    
+    return $data;
 }

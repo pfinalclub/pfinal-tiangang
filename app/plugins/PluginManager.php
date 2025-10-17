@@ -42,6 +42,9 @@ class PluginManager
     private function loadPlugin(string $pluginFile): void
     {
         try {
+            // 包含插件文件
+            require_once $pluginFile;
+            
             // 动态加载插件类
             $className = $this->getClassNameFromFile($pluginFile);
             if ($className && class_exists($className)) {
@@ -67,9 +70,22 @@ class PluginManager
             return null;
         }
         
-        // 简单的类名提取（实际项目中可能需要更复杂的解析）
+        // 提取命名空间和类名
+        $namespace = '';
+        $className = '';
+        
+        // 提取命名空间
+        if (preg_match('/namespace\s+([^;]+);/', $content, $matches)) {
+            $namespace = $matches[1];
+        }
+        
+        // 提取类名
         if (preg_match('/class\s+(\w+)/', $content, $matches)) {
-            return $matches[1];
+            $className = $matches[1];
+        }
+        
+        if ($className) {
+            return $namespace ? "{$namespace}\\{$className}" : $className;
         }
         
         return null;

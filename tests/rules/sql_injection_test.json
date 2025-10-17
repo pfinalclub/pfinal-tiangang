@@ -1,0 +1,161 @@
+{
+  "rule_name": "sql_injection",
+  "description": "SQL 注入攻击检测规则测试用例",
+  "test_cases": [
+    {
+      "name": "UNION SELECT 攻击",
+      "description": "检测 UNION SELECT 攻击模式",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/api/users",
+        "method": "GET",
+        "query": {
+          "id": "1' UNION SELECT username, password FROM users--"
+        },
+        "post": {},
+        "headers": {
+          "User-Agent": "Mozilla/5.0",
+          "Accept": "text/html,application/xhtml+xml"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": true,
+        "rule": "sql_injection",
+        "severity": "high",
+        "description": "UNION SELECT 攻击"
+      }
+    },
+    {
+      "name": "SELECT 查询攻击",
+      "description": "检测 SELECT 查询攻击模式",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/api/search",
+        "method": "POST",
+        "query": {},
+        "post": {
+          "keyword": "admin' OR '1'='1"
+        },
+        "headers": {
+          "User-Agent": "Mozilla/5.0",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": true,
+        "rule": "sql_injection",
+        "severity": "high",
+        "description": "SELECT 查询攻击"
+      }
+    },
+    {
+      "name": "DROP TABLE 攻击",
+      "description": "检测 DROP TABLE 攻击模式",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/admin/delete",
+        "method": "POST",
+        "query": {},
+        "post": {
+          "table": "users; DROP TABLE users;--"
+        },
+        "headers": {
+          "User-Agent": "Mozilla/5.0",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": true,
+        "rule": "sql_injection",
+        "severity": "critical",
+        "description": "DROP TABLE 攻击"
+      }
+    },
+    {
+      "name": "SLEEP 时间盲注",
+      "description": "检测 SLEEP 时间盲注攻击",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/api/check",
+        "method": "GET",
+        "query": {
+          "id": "1' AND SLEEP(5)--"
+        },
+        "post": {},
+        "headers": {
+          "User-Agent": "Mozilla/5.0"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": true,
+        "rule": "sql_injection",
+        "severity": "high",
+        "description": "SLEEP 时间盲注"
+      }
+    },
+    {
+      "name": "正常请求",
+      "description": "正常请求应该通过检测",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/api/users",
+        "method": "GET",
+        "query": {
+          "id": "123"
+        },
+        "post": {},
+        "headers": {
+          "User-Agent": "Mozilla/5.0",
+          "Accept": "application/json"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": false
+      }
+    },
+    {
+      "name": "正常搜索请求",
+      "description": "正常的搜索请求应该通过",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/api/search",
+        "method": "POST",
+        "query": {},
+        "post": {
+          "keyword": "javascript tutorial"
+        },
+        "headers": {
+          "User-Agent": "Mozilla/5.0",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": false
+      }
+    }
+  ]
+}

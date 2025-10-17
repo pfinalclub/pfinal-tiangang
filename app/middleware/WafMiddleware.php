@@ -8,6 +8,7 @@ use Tiangang\Waf\Detectors\AsyncDetector;
 use Tiangang\Waf\Core\DecisionEngine;
 use Tiangang\Waf\Core\WafResult;
 use Tiangang\Waf\Config\ConfigManager;
+use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep};
 
 /**
  * WAF 中间件
@@ -32,33 +33,103 @@ class WafMiddleware
     }
     
     /**
-     * 处理请求
+     * 异步处理请求
      */
-    public function process(Request $request): WafResult
+    public function process(Request $request): \Generator
     {
-        // 提取请求数据
-        $requestData = $this->extractRequestData($request);
+        // 异步提取请求数据
+        $requestData = yield create_task($this->asyncExtractRequestData($request));
+
+        // 并发执行快速检测和异步检测
+        $tasks = [];
         
-        // 快速检测
         if ($this->config['detection']['quick_enabled']) {
-            $quickResult = $this->quickDetector->check($requestData);
-            if ($quickResult->isBlocked()) {
-                return $quickResult;
-            }
+            $tasks[] = create_task($this->asyncQuickDetect($requestData));
         }
         
-        // 异步检测
         if ($this->config['detection']['async_enabled']) {
-            $asyncResults = $this->asyncDetector->check($requestData);
-            return $this->decisionEngine->evaluate($asyncResults);
+            $tasks[] = create_task($this->asyncDetect($requestData));
         }
-        
-        // 默认放行
-        return WafResult::allow();
+
+        if (empty($tasks)) {
+            return WafResult::allow();
+        }
+
+        // 并发等待所有检测完成，设置超时
+        $timeout = $this->config['detection']['timeout'] ?? 5.0;
+        try {
+            $results = yield wait_for(gather(...$tasks), $timeout);
+            return $this->decisionEngine->evaluate($results);
+        } catch (\PfinalClub\Asyncio\TimeoutException $e) {
+            // 超时情况下，记录日志但放行
+            logger('warning', 'WAF detection timeout', [
+                'timeout' => $timeout,
+                'url' => $request->path()
+            ]);
+            return WafResult::allow();
+        }
     }
     
     /**
-     * 提取请求数据
+     * 异步提取请求数据
+     */
+    private function asyncExtractRequestData(Request $request): \Generator
+    {
+        // 模拟异步数据提取过程
+        yield sleep(0.001);
+        
+        return [
+            'ip' => $this->getRealIp($request),
+            'uri' => $request->path(),
+            'method' => $request->method(),
+            'headers' => $request->header(),
+            'query' => $request->get(),
+            'post' => $request->post(),
+            'cookies' => $request->cookie(),
+            'user_agent' => $request->header('User-Agent', ''),
+            'referer' => $request->header('Referer', ''),
+            'timestamp' => time(),
+        ];
+    }
+    
+    /**
+     * 异步快速检测
+     */
+    private function asyncQuickDetect(array $requestData): \Generator
+    {
+        // 模拟异步快速检测
+        yield sleep(0.005);
+        
+        $result = $this->quickDetector->check($requestData);
+        
+        // 如果是 Generator，运行它
+        if ($result instanceof \Generator) {
+            $result = yield $result;
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * 异步深度检测
+     */
+    private function asyncDetect(array $requestData): \Generator
+    {
+        // 模拟异步深度检测
+        yield sleep(0.01);
+        
+        $results = $this->asyncDetector->check($requestData);
+        
+        // 如果是 Generator，运行它
+        if ($results instanceof \Generator) {
+            $results = yield $results;
+        }
+        
+        return $results;
+    }
+    
+    /**
+     * 提取请求数据（同步版本，保留兼容性）
      */
     private function extractRequestData(Request $request): array
     {

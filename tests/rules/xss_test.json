@@ -1,0 +1,160 @@
+{
+  "rule_name": "xss",
+  "description": "XSS 跨站脚本攻击检测规则测试用例",
+  "test_cases": [
+    {
+      "name": "Script 标签注入",
+      "description": "检测 script 标签注入攻击",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/comment",
+        "method": "POST",
+        "query": {},
+        "post": {
+          "content": "<script>alert('XSS')</script>"
+        },
+        "headers": {
+          "User-Agent": "Mozilla/5.0",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": true,
+        "rule": "xss",
+        "severity": "high",
+        "description": "Script 标签注入"
+      }
+    },
+    {
+      "name": "JavaScript 协议",
+      "description": "检测 javascript: 协议攻击",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/link",
+        "method": "GET",
+        "query": {
+          "url": "javascript:alert('XSS')"
+        },
+        "post": {},
+        "headers": {
+          "User-Agent": "Mozilla/5.0"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": true,
+        "rule": "xss",
+        "severity": "high",
+        "description": "JavaScript 协议"
+      }
+    },
+    {
+      "name": "事件处理器注入",
+      "description": "检测事件处理器注入攻击",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/form",
+        "method": "POST",
+        "query": {},
+        "post": {
+          "name": "<img src=x onerror=alert('XSS')>"
+        },
+        "headers": {
+          "User-Agent": "Mozilla/5.0",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": true,
+        "rule": "xss",
+        "severity": "high",
+        "description": "事件处理器"
+      }
+    },
+    {
+      "name": "iframe 标签注入",
+      "description": "检测 iframe 标签注入攻击",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/embed",
+        "method": "POST",
+        "query": {},
+        "post": {
+          "content": "<iframe src='javascript:alert(1)'></iframe>"
+        },
+        "headers": {
+          "User-Agent": "Mozilla/5.0",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": true,
+        "rule": "xss",
+        "severity": "medium",
+        "description": "iframe 标签注入"
+      }
+    },
+    {
+      "name": "正常评论",
+      "description": "正常的评论内容应该通过",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/comment",
+        "method": "POST",
+        "query": {},
+        "post": {
+          "content": "这是一条正常的评论，没有任何恶意代码。"
+        },
+        "headers": {
+          "User-Agent": "Mozilla/5.0",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": false
+      }
+    },
+    {
+      "name": "正常链接",
+      "description": "正常的链接应该通过",
+      "request_data": {
+        "ip": "127.0.0.1",
+        "uri": "/link",
+        "method": "GET",
+        "query": {
+          "url": "https://www.example.com"
+        },
+        "post": {},
+        "headers": {
+          "User-Agent": "Mozilla/5.0"
+        },
+        "cookies": {},
+        "user_agent": "Mozilla/5.0",
+        "referer": "",
+        "timestamp": 1640995200
+      },
+      "expected": {
+        "matched": false
+      }
+    }
+  ]
+}

@@ -81,7 +81,7 @@ class SqlInjectionRule implements WafPluginInterface
         return $this->config['enabled'];
     }
     
-    public function detect(array $requestData): \Generator
+    public function detect(array $requestData): array
     {
         $results = [];
         $content = $this->extractContent($requestData);

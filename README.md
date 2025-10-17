@@ -60,6 +60,25 @@ php compare_async.php
 php waf_async_comparison.php
 ```
 
+### 规则测试和热更新
+
+```bash
+# 运行规则测试
+php test_rules.php
+
+# 启动热更新监听
+php hot_reload.php start
+
+# 手动重新加载规则
+php hot_reload.php reload
+
+# 查看规则状态
+php hot_reload.php status
+
+# 测试规则配置
+php hot_reload.php test
+```
+
 ## 异步检测性能对比
 
 ### 传统同步方式 vs 异步并发方式

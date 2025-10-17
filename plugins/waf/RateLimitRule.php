@@ -62,7 +62,7 @@ class RateLimitRule implements WafPluginInterface
         return $this->config['enabled'];
     }
     
-    public function detect(array $requestData): \Generator
+    public function detect(array $requestData): array
     {
         $ip = $requestData['ip'] ?? '';
         $uri = $requestData['uri'] ?? '';

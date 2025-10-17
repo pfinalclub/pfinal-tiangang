@@ -32,7 +32,7 @@ interface WafPluginInterface
     /**
      * 检测请求
      */
-    public function detect(array $requestData): \Generator;
+    public function detect(array $requestData): \Generator|array;
     
     /**
      * 获取插件描述

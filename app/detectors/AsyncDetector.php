@@ -2,8 +2,7 @@
 
 namespace Tiangang\Waf\Detectors;
 
-use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep};
-use function PfinalClub\Asyncio\run;
+use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep, run};
 use Tiangang\Waf\Plugins\PluginManager;
 use Tiangang\Waf\Config\ConfigManager;
 
@@ -28,7 +27,7 @@ class AsyncDetector
     /**
      * 异步检测
      */
-    public function check(array $requestData): \Generator
+    public function check(array $requestData): array
     {
         // 加载启用的插件
         $enabledPlugins = $this->getEnabledPlugins();
@@ -37,14 +36,31 @@ class AsyncDetector
             return [];
         }
         
-        // 创建检测任务
-        $tasks = [];
+        // 简化实现：直接运行插件检测
+        $results = [];
         foreach ($enabledPlugins as $plugin) {
-            $tasks[] = create_task($this->runPlugin($plugin, $requestData));
+            try {
+                $result = $plugin->detect($requestData);
+                
+                // 如果是 Generator，运行它
+                if ($result instanceof \Generator) {
+                    $result = \PfinalClub\Asyncio\run($result);
+                }
+                
+                $results[] = [
+                    'plugin' => $plugin->getName(),
+                    'result' => $result,
+                    'success' => true,
+                ];
+            } catch (\Exception $e) {
+                $results[] = [
+                    'plugin' => $plugin->getName(),
+                    'result' => null,
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                ];
+            }
         }
-        
-        // 并发执行检测
-        $results = yield gather(...$tasks);
         
         // 合并结果
         return $this->mergeResults($results);
