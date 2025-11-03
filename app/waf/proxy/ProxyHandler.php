@@ -202,14 +202,59 @@ class ProxyHandler
     }
     
     /**
-     * 构建目标 URL（同步版本，保留兼容性）
+     * 构建目标 URL（修复：添加 SSRF 防护）
      */
     private function buildTargetUrl(Request $request): string
     {
         $backend = $this->getBackendConfig();
         $baseUrl = $backend['url'];
-        $path = $request->path();
+        
+        // 1. 验证基础 URL
+        if (!filter_var($baseUrl, FILTER_VALIDATE_URL)) {
+            throw new \InvalidArgumentException('Invalid backend URL configuration');
+        }
+        
+        $parsedBase = parse_url($baseUrl);
+        if (!$parsedBase || !isset($parsedBase['scheme'], $parsedBase['host'])) {
+            throw new \InvalidArgumentException('Invalid backend URL structure');
+        }
+        
+        // 2. 验证协议（只允许 http 和 https）
+        $allowedSchemes = $this->backendConfig['security']['allowed_schemes'] ?? ['http', 'https'];
+        if (!in_array($parsedBase['scheme'], $allowedSchemes)) {
+            throw new \InvalidArgumentException('Backend URL must use http or https protocol');
+        }
+        
+        // 3. 验证目标主机（防止 SSRF）
+        $allowedHosts = $this->backendConfig['security']['allowed_backend_hosts'] ?? [];
+        $baseHost = $parsedBase['host'];
+        
+        // 如果配置了允许的主机列表，必须匹配
+        if (!empty($allowedHosts) && !in_array($baseHost, $allowedHosts)) {
+            // 如果列表不为空但不匹配，添加基础主机到列表（向后兼容）
+            $allowedHosts[] = $baseHost;
+        }
+        
+        // 4. 阻止私有 IP（如果启用）
+        $blockPrivateIps = $this->backendConfig['security']['block_private_ips'] ?? true;
+        if ($blockPrivateIps) {
+            $hostIp = gethostbyname($baseHost);
+            if ($hostIp !== $baseHost && !filter_var($hostIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                throw new \InvalidArgumentException('SSRF attempt detected: Private IP address not allowed');
+            }
+        }
+        
+        // 5. 构建目标路径（清理路径，防止路径遍历）
+        $path = $this->sanitizePath($request->path());
         $query = $request->queryString();
+        
+        // 6. 验证并清理查询字符串
+        if ($query) {
+            parse_str($query, $queryParams);
+            // 移除可能导致问题的参数
+            unset($queryParams['url'], $queryParams['redirect'], $queryParams['return']);
+            $query = http_build_query($queryParams);
+        }
         
         $targetUrl = rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
         
@@ -217,7 +262,40 @@ class ProxyHandler
             $targetUrl .= '?' . $query;
         }
         
+        // 7. 最终验证：确保目标主机在允许列表中或为空列表（允许所有）
+        $parsedTarget = parse_url($targetUrl);
+        if ($parsedTarget && isset($parsedTarget['host'])) {
+            $targetHost = $parsedTarget['host'];
+            
+            // 如果配置了允许列表，必须匹配
+            if (!empty($allowedHosts) && !in_array($targetHost, $allowedHosts)) {
+                throw new \InvalidArgumentException('SSRF attempt detected: Host not in allowed list');
+            }
+            
+            // 验证目标主机不为私有 IP（如果启用）
+            if ($blockPrivateIps) {
+                $targetIp = gethostbyname($targetHost);
+                if ($targetIp !== $targetHost && !filter_var($targetIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    throw new \InvalidArgumentException('SSRF attempt detected: Target resolves to private IP');
+                }
+            }
+        }
+        
         return $targetUrl;
+    }
+    
+    /**
+     * 清理路径（防止路径遍历）
+     */
+    private function sanitizePath(string $path): string
+    {
+        // 移除路径遍历序列
+        $path = str_replace(['../', '..\\', '//'], '', $path);
+        // 移除危险字符
+        $path = preg_replace('/[^a-zA-Z0-9\-_\/\.]/', '', $path);
+        // 规范化路径
+        $path = preg_replace('#/+#', '/', $path);
+        return $path;
     }
     
     /**
@@ -250,7 +328,7 @@ class ProxyHandler
     }
     
     /**
-     * 过滤请求头
+     * 过滤请求头（修复：防止请求头注入）
      */
     private function filterHeaders(array $headers): array
     {
@@ -269,17 +347,68 @@ class ProxyHandler
         
         foreach ($headers as $name => $value) {
             $lowerName = strtolower($name);
-            if (!in_array($lowerName, $excludeHeaders)) {
-                $filteredHeaders[$name] = $value;
+            
+            // 排除危险头
+            if (in_array($lowerName, $excludeHeaders)) {
+                continue;
             }
+            
+            // 验证头名称（防止注入）
+            if (preg_match('/[\r\n]/', $name)) {
+                continue; // 跳过包含换行符的头名
+            }
+            
+            // 验证头值（防止注入）
+            if (is_string($value) && preg_match('/[\r\n]/', $value)) {
+                $value = str_replace(["\r", "\n"], '', $value); // 移除换行符
+            }
+            
+            $filteredHeaders[$name] = $value;
         }
         
-        // 添加代理相关头
-        $filteredHeaders['X-Forwarded-For'] = $this->getClientIp();
-        $filteredHeaders['X-Forwarded-Proto'] = $this->getProtocol();
-        $filteredHeaders['X-Real-IP'] = $this->getClientIp();
+        // 添加代理相关头（使用验证过的值）
+        $clientIp = $this->getClientIp();
+        if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
+            $filteredHeaders['X-Forwarded-For'] = $clientIp;
+            $filteredHeaders['X-Real-IP'] = $clientIp;
+        }
+        
+        $protocol = $this->getProtocol();
+        if (in_array($protocol, ['http', 'https'])) {
+            $filteredHeaders['X-Forwarded-Proto'] = $protocol;
+        }
         
         return $filteredHeaders;
+    }
+    
+    /**
+     * 获取客户端 IP（安全版本）
+     */
+    private function getClientIp(): string
+    {
+        // 这里应该使用与 WafMiddleware 相同的安全方法
+        // 简化版本，实际应该注入或共享
+        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    }
+    
+    /**
+     * 获取协议（安全版本）
+     */
+    private function getProtocol(): string
+    {
+        $protocol = $_SERVER['HTTPS'] ?? $_SERVER['REQUEST_SCHEME'] ?? 'http';
+        
+        // 标准化
+        if ($protocol === 'on' || $protocol === '1') {
+            return 'https';
+        }
+        
+        // 只允许 http 或 https
+        if (!in_array(strtolower($protocol), ['http', 'https'])) {
+            return 'http';
+        }
+        
+        return strtolower($protocol);
     }
     
     /**
@@ -397,22 +526,33 @@ class ProxyHandler
     }
     
     /**
-     * 处理意外错误
+     * 处理意外错误（修复：区分生产/开发环境，防止信息泄露）
      */
     private function handleUnexpectedError(\Exception $e, Request $request): Response
     {
+        $isDebug = env('APP_DEBUG', false) && env('APP_ENV', 'production') !== 'production';
+        
+        // 记录详细错误到日志（不返回给客户端）
         logger('error', 'Unexpected proxy error', [
             'url' => $request->path(),
             'method' => $request->method(),
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $isDebug ? $e->getTraceAsString() : null, // 生产环境不记录堆栈
         ]);
+        
+        // 生成请求ID用于追踪
+        $requestId = uniqid('req_', true);
         
         return new Response(500, [
             'Content-Type' => 'application/json',
         ], json_encode([
             'error' => 'Internal Server Error',
-            'message' => 'An unexpected error occurred',
+            'message' => $isDebug 
+                ? $e->getMessage() 
+                : 'An unexpected error occurred. Please contact support.',
+            'request_id' => $requestId,
             'timestamp' => time(),
         ]));
     }

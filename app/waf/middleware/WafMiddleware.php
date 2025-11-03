@@ -164,27 +164,46 @@ class WafMiddleware
     }
     
     /**
-     * 获取真实 IP
+     * 获取真实 IP（修复：加强验证，防止 IP 伪造）
      */
     private function getRealIp(Request $request): string
     {
-        $headers = [
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_REAL_IP',
-            'HTTP_CLIENT_IP',
-            'REMOTE_ADDR'
-        ];
+        // 1. 获取连接的真实 IP（最可靠）
+        $remoteIp = $request->connection->getRemoteIp() ?? '127.0.0.1';
         
-        foreach ($headers as $header) {
-            if (!empty($_SERVER[$header])) {
-                $ips = explode(',', $_SERVER[$header]);
-                $ip = trim($ips[0]);
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    return $ip;
-                }
+        // 2. 验证 IP 格式
+        if (!filter_var($remoteIp, FILTER_VALIDATE_IP)) {
+            return '127.0.0.1';
+        }
+        
+        // 3. 检查是否为可信代理
+        $trustedProxies = $this->config['security']['trusted_proxies'] ?? ['127.0.0.1', '::1'];
+        
+        // 如果不是可信代理，直接返回连接 IP（防止 IP 伪造）
+        if (!in_array($remoteIp, $trustedProxies)) {
+            return $remoteIp;
+        }
+        
+        // 4. 如果是可信代理，才信任代理头
+        $forwardedFor = $request->header('X-Forwarded-For');
+        if ($forwardedFor) {
+            // 取最后一个 IP（最靠近客户端的）
+            $ips = array_map('trim', explode(',', $forwardedFor));
+            $ip = end($ips);
+            
+            // 验证 IP 格式（允许私有 IP）
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
             }
         }
         
-        return $request->connection->getRemoteIp();
+        // 5. 尝试其他代理头（仅当是可信代理时）
+        $realIp = $request->header('X-Real-IP');
+        if ($realIp && filter_var($realIp, FILTER_VALIDATE_IP)) {
+            return $realIp;
+        }
+        
+        // 6. 回退到连接 IP
+        return $remoteIp;
     }
 }

@@ -11,6 +11,7 @@ use app\waf\proxy\ProxyHandler;
 use app\waf\proxy\BackendManager;
 use app\admin\routes\AdminRoutes;
 use app\admin\middleware\AuthMiddleware;
+use app\admin\middleware\CsrfMiddleware;
 use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep};
 
 /**
@@ -27,6 +28,7 @@ class TiangangGateway
     private BackendManager $backendManager;
     private AdminRoutes $adminRoutes;
     private AuthMiddleware $authMiddleware;
+    private CsrfMiddleware $csrfMiddleware;
     private ?array $config;
     
     public function __construct()
@@ -38,6 +40,7 @@ class TiangangGateway
         $this->backendManager = new BackendManager();
         $this->adminRoutes = new AdminRoutes();
         $this->authMiddleware = new AuthMiddleware();
+        $this->csrfMiddleware = new CsrfMiddleware();
         $this->config = $this->configManager->get('waf') ?? [];
     }
     
@@ -51,9 +54,11 @@ class TiangangGateway
         try {
             // 检查是否为管理界面请求
             if ($this->isWebRequest($request)) {
-                // 对管理界面请求应用认证中间件
+                // 对管理界面请求应用认证中间件和 CSRF 保护
                 return $this->authMiddleware->process($request, function($request) {
-                    return $this->adminRoutes->handleRequest($request);
+                    return $this->csrfMiddleware->process($request, function($request) {
+                        return $this->adminRoutes->handleRequest($request);
+                    });
                 });
             }
             
@@ -271,15 +276,32 @@ class TiangangGateway
     }
     
     /**
-     * 创建错误响应
+     * 创建错误响应（修复：区分生产/开发环境，防止信息泄露）
      */
     private function createErrorResponse(\Exception $e): Response
     {
+        $isDebug = env('APP_DEBUG', false) && env('APP_ENV', 'production') !== 'production';
+        
+        // 记录详细错误到日志（不返回给客户端）
+        error_log(sprintf(
+            'WAF Gateway Error [%s]: %s in %s:%d',
+            get_class($e),
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine()
+        ));
+        
+        // 生成请求ID用于追踪
+        $requestId = uniqid('req_', true);
+        
         return new Response(500, [
             'Content-Type' => 'application/json',
         ], json_encode([
             'error' => 'Internal Server Error',
-            'message' => $e->getMessage(),
+            'message' => $isDebug 
+                ? $e->getMessage() 
+                : 'An unexpected error occurred. Please contact support.',
+            'request_id' => $requestId,
             'timestamp' => time(),
         ]));
     }

@@ -304,27 +304,106 @@ class DashboardController
     }
 
     /**
-     * 数组转XML
+     * 数组转XML（修复：防止 XXE 注入，禁用外部实体解析）
      */
     private function arrayToXml(array $data): string
     {
-        $xml = new \SimpleXMLElement('<root/>');
-        $this->arrayToXmlRecursive($data, $xml);
-        return $xml->asXML();
+        // 方法1：使用字符串拼接（最安全，不解析XML）
+        return $this->arrayToXmlString($data);
+        
+        // 方法2：如果必须使用 SimpleXMLElement，先禁用外部实体（备用方案）
+        // return $this->arrayToXmlWithSimpleXMLElement($data);
+    }
+    
+    /**
+     * 使用字符串拼接生成XML（安全方法，无XXE风险）
+     */
+    private function arrayToXmlString(array $data, int $depth = 0): string
+    {
+        if ($depth === 0) {
+            $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n<root>";
+        } else {
+            $xml = '';
+        }
+        
+        foreach ($data as $key => $value) {
+            // 验证和清理标签名
+            $safeKey = preg_replace('/[^a-zA-Z0-9_\-]/', '', $key);
+            if (empty($safeKey)) {
+                $safeKey = 'item';
+            }
+            
+            if (is_array($value)) {
+                $xml .= "<{$safeKey}>";
+                $xml .= $this->arrayToXmlString($value, $depth + 1);
+                $xml .= "</{$safeKey}>";
+            } else {
+                // 转义XML特殊字符
+                $safeValue = htmlspecialchars((string)$value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+                $xml .= "<{$safeKey}>{$safeValue}</{$safeKey}>";
+            }
+        }
+        
+        if ($depth === 0) {
+            $xml .= '</root>';
+        }
+        
+        return $xml;
+    }
+    
+    /**
+     * 使用 SimpleXMLElement 生成XML（备用方案，已禁用外部实体）
+     */
+    private function arrayToXmlWithSimpleXMLElement(array $data): string
+    {
+        // 禁用外部实体加载（防止 XXE）
+        $oldValue = libxml_disable_entity_loader(true);
+        
+        try {
+            // 使用内部子集，不使用外部实体
+            $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>', LIBXML_NOENT);
+            
+            // 递归添加数据
+            $this->arrayToXmlRecursiveSafe($data, $xml);
+            
+            return $xml->asXML();
+        } finally {
+            // 恢复原始设置
+            libxml_disable_entity_loader($oldValue);
+        }
     }
 
     /**
-     * 递归转换数组到XML
+     * 递归转换数组到XML（安全版本，已禁用外部实体）
+     */
+    private function arrayToXmlRecursiveSafe(array $data, \SimpleXMLElement $xml): void
+    {
+        foreach ($data as $key => $value) {
+            // 验证和清理标签名
+            $safeKey = preg_replace('/[^a-zA-Z0-9_\-]/', '', $key);
+            if (empty($safeKey)) {
+                $safeKey = 'item';
+            }
+            
+            if (is_array($value)) {
+                $subnode = $xml->addChild($safeKey);
+                $this->arrayToXmlRecursiveSafe($value, $subnode);
+            } else {
+                // 转义XML特殊字符
+                $safeValue = htmlspecialchars((string)$value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+                $xml->addChild($safeKey, $safeValue);
+            }
+        }
+    }
+    
+    /**
+     * 递归转换数组到XML（已废弃，保留用于向后兼容，但不推荐使用）
+     * 
+     * @deprecated 使用 arrayToXmlRecursiveSafe 代替，已禁用外部实体
      */
     private function arrayToXmlRecursive(array $data, \SimpleXMLElement $xml): void
     {
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                $subnode = $xml->addChild($key);
-                $this->arrayToXmlRecursive($value, $subnode);
-            } else {
-                $xml->addChild($key, htmlspecialchars($value));
-            }
-        }
+        // 调用安全版本
+        $this->arrayToXmlRecursiveSafe($data, $xml);
     }
 }

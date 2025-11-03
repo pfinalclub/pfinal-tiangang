@@ -36,12 +36,29 @@ $worker->onMessage = function ($connection, Request $request) {
         $connection->send($response);
         
     } catch (Exception $e) {
-        // 错误处理
+        // 错误处理（修复：区分生产/开发环境，防止信息泄露）
+        $isDebug = env('APP_DEBUG', false) && env('APP_ENV', 'production') !== 'production';
+        
+        // 记录详细错误到日志（不返回给客户端）
+        error_log(sprintf(
+            'WAF Error [%s]: %s in %s:%d',
+            get_class($e),
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine()
+        ));
+        
+        // 生成请求ID用于追踪
+        $requestId = uniqid('req_', true);
+        
         $errorResponse = new Response(500, [
             'Content-Type' => 'application/json',
         ], json_encode([
             'error' => 'Internal Server Error',
-            'message' => $e->getMessage(),
+            'message' => $isDebug 
+                ? $e->getMessage() 
+                : 'An unexpected error occurred. Please contact support.',
+            'request_id' => $requestId,
             'timestamp' => time(),
         ]));
         

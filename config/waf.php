@@ -88,4 +88,17 @@ return [
             ],
         ],
     ],
+    
+    // 安全配置
+    'security' => [
+        // 可信代理列表（只有这些 IP 的代理头才会被信任）
+        'trusted_proxies' => !empty(env('TRUSTED_PROXIES', '')) 
+            ? array_map('trim', explode(',', env('TRUSTED_PROXIES', '127.0.0.1,::1')))
+            : ['127.0.0.1', '::1'],
+        
+        // 请求大小限制
+        'max_body_size' => env('MAX_BODY_SIZE', 10485760), // 10MB
+        'max_url_length' => env('MAX_URL_LENGTH', 2048),
+        'max_header_size' => env('MAX_HEADER_SIZE', 8192),
+    ],
 ];

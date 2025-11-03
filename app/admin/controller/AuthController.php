@@ -4,6 +4,8 @@ namespace app\admin\controller;
 
 use Workerman\Protocols\Http\Request;
 use Workerman\Protocols\Http\Response;
+use app\admin\middleware\CsrfMiddleware;
+use Predis\Client as RedisClient;
 
 /**
  * 认证控制器
@@ -12,6 +14,39 @@ use Workerman\Protocols\Http\Response;
  */
 class AuthController
 {
+    private CsrfMiddleware $csrfMiddleware;
+    private ?RedisClient $redis;
+    
+    public function __construct()
+    {
+        $this->csrfMiddleware = new CsrfMiddleware();
+        $this->redis = $this->getRedisClient();
+    }
+    
+    /**
+     * 获取 Redis 客户端（用于登录失败计数）
+     */
+    private function getRedisClient(): ?RedisClient
+    {
+        try {
+            $configManager = new \app\waf\config\ConfigManager();
+            $config = $configManager->get('database.redis') ?? [];
+            
+            if (empty($config) || !($config['host'] ?? false)) {
+                return null;
+            }
+            
+            return new RedisClient([
+                'scheme' => 'tcp',
+                'host' => $config['host'] ?? '127.0.0.1',
+                'port' => $config['port'] ?? 6379,
+                'password' => $config['password'] ?? null,
+                'database' => $config['database'] ?? 0,
+            ]);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
     /**
      * 显示登录页面
      */
@@ -22,29 +57,69 @@ class AuthController
             return new Response(302, ['Location' => '/admin/dashboard'], '');
         }
 
-        $html = $this->generateLoginPage();
+        // 生成 CSRF Token（如果还没有会话，使用临时会话ID）
+        $sessionId = $request->cookie('waf_session') ?? bin2hex(random_bytes(32));
+        $csrfToken = $this->csrfMiddleware->generateToken($sessionId);
+        
+        $html = $this->generateLoginPage($csrfToken);
         return new Response(200, ['Content-Type' => 'text/html'], $html);
     }
 
     /**
-     * 处理登录请求
+     * 处理登录请求（修复：添加登录失败限制和 CSRF 验证）
      */
     public function doLogin(Request $request): Response
     {
-        // 解析POST数据
+        // 0. 验证 CSRF Token（登录接口特殊处理）
+        $csrfToken = $this->extractCsrfToken($request);
+        $sessionId = $request->cookie('waf_session') ?? $this->getTempSessionId($request);
+        if (!$this->csrfMiddleware->validateTokenForSession($sessionId, $csrfToken)) {
+            return new Response(403, ['Content-Type' => 'application/json'], json_encode([
+                'code' => 403,
+                'msg' => 'CSRF token validation failed'
+            ]));
+        }
+        
+        // 1. 检查 IP 是否被临时封禁
+        $clientIp = $this->getClientIp($request);
+        if ($this->isIpBlocked($clientIp)) {
+            return new Response(429, ['Content-Type' => 'application/json'], json_encode([
+                'code' => 429,
+                'msg' => '登录尝试过于频繁，请稍后再试'
+            ]));
+        }
+        
+        // 2. 解析POST数据
         parse_str($request->rawBody(), $postData);
         $username = $postData['username'] ?? '';
         $password = $postData['password'] ?? '';
         $remember = isset($postData['remember']) && $postData['remember'] === 'on';
 
-        // 验证用户名和密码
+        // 3. 记录登录尝试
+        $this->recordLoginAttempt($clientIp, $username);
+
+        // 4. 验证用户名和密码
         if ($this->validateCredentials($username, $password)) {
+            // 成功：清除失败记录
+            $this->clearFailedAttempts($clientIp, $username);
             // 创建会话
             $sessionId = $this->createSession($request, $username, $remember);
             
-            // 设置Cookie头
+            // 设置Cookie头（修复：添加 Secure 和 SameSite 标志）
             $expires = $remember ? time() + (30 * 24 * 3600) : time() + (24 * 3600);
-            $cookieValue = "waf_session={$sessionId}; Path=/; HttpOnly; Max-Age=" . ($expires - time());
+            
+            // 根据环境决定是否使用 Secure（生产环境 HTTPS 时使用）
+            $isSecure = (env('APP_ENV', 'development') === 'production') || 
+                        (env('FORCE_HTTPS', false) === true);
+            $secureFlag = $isSecure ? '; Secure' : '';
+            
+            // URL 编码会话 ID，添加 SameSite 防止 CSRF
+            $cookieValue = sprintf(
+                'waf_session=%s; Path=/; HttpOnly%s; SameSite=Strict; Max-Age=%d',
+                urlencode($sessionId),
+                $secureFlag,
+                $expires - time()
+            );
             
             return new Response(200, [
                 'Content-Type' => 'application/json',
@@ -55,11 +130,59 @@ class AuthController
                 'data' => ['redirect' => '/admin/dashboard']
             ]));
         } else {
+            // 失败：增加失败计数
+            $failCount = $this->incrementFailedAttempts($clientIp, $username);
+            
+            // 超过阈值则封禁 IP
+            if ($failCount >= 5) {
+                $this->blockIp($clientIp, 3600); // 封禁1小时
+                return new Response(429, ['Content-Type' => 'application/json'], json_encode([
+                    'code' => 429,
+                    'msg' => '登录失败次数过多，IP已被临时封禁'
+                ]));
+            }
+            
+            // 计算剩余尝试次数
+            $remainingAttempts = 5 - $failCount;
+            
             return new Response(200, ['Content-Type' => 'application/json'], json_encode([
                 'code' => 1,
-                'msg' => '用户名或密码错误'
+                'msg' => "用户名或密码错误（还剩 {$remainingAttempts} 次尝试）"
             ]));
         }
+    }
+    
+    /**
+     * 从请求中提取 CSRF Token
+     */
+    private function extractCsrfToken(Request $request): ?string
+    {
+        // 优先从 Header 获取（AJAX 请求）
+        $headerToken = $request->header('X-CSRF-Token');
+        if ($headerToken) {
+            return $headerToken;
+        }
+        
+        // 从 POST 数据获取（表单提交）
+        parse_str($request->rawBody(), $postData);
+        return $postData['_token'] ?? $postData['csrf_token'] ?? null;
+    }
+    
+    /**
+     * 获取临时会话 ID（用于未登录用户生成 CSRF Token）
+     */
+    private function getTempSessionId(Request $request): string
+    {
+        // 尝试从 Cookie 获取（可能还未设置）
+        $sessionId = $request->cookie('waf_session');
+        if ($sessionId) {
+            return $sessionId;
+        }
+        
+        // 如果没有，基于 IP 和 User-Agent 生成临时 ID（仅用于 CSRF Token）
+        $ip = $this->getClientIp($request);
+        $ua = $request->header('User-Agent', '');
+        return hash('sha256', $ip . $ua . 'csrf_temp');
     }
 
     /**
@@ -98,14 +221,32 @@ class AuthController
      */
     private function validateCredentials(string $username, string $password): bool
     {
-        // 默认管理员账户（生产环境应该从数据库验证）
+        // 输入验证：检查用户名和密码是否为空
+        if (empty($username) || empty($password)) {
+            return false;
+        }
+        
+        // 输入验证：长度限制
+        if (strlen($username) > 50 || strlen($password) > 128) {
+            return false;
+        }
+        
+        // 输入验证：格式验证（只允许字母、数字、下划线、短横线）
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $username)) {
+            return false;
+        }
+        
+        // 默认管理员账户（使用预生成的哈希值）
+        // 注意：生产环境应该从数据库验证，不要将密码哈希提交到版本控制
         $validUsers = [
-            'admin' => password_hash('admin123', PASSWORD_DEFAULT),
-            'waf' => password_hash('waf2024', PASSWORD_DEFAULT),
-            'tiangang' => password_hash('tiangang2024', PASSWORD_DEFAULT)
+            'admin' => '$2y$12$YLJMW2EePx8Oa7uMkbfvne1lzmpAxlo5lruaERM.qPLv78L/Dpuu2', // admin123
+            'waf' => '$2y$12$QSzjcbBTJZhDqNplSbDXQ.ve.Lqv0dQVztsu3INh8wnNV.C6md216', // waf2024
+            'tiangang' => '$2y$12$41ejLNKxqpeXerzfm.3H.el.RVxCHXMGqDUhQQNeUBHAEXdznZUs.', // tiangang2024
         ];
 
         if (!isset($validUsers[$username])) {
+            // 即使用户不存在，也执行一次哈希验证以保持时间一致（防止时间攻击）
+            password_verify($password, '$2y$10$dummy_hash_for_timing_attack_prevention');
             return false;
         }
 
@@ -117,6 +258,10 @@ class AuthController
      */
     private function createSession(Request $request, string $username, bool $remember = false): string
     {
+        // 1. 销毁所有旧会话（防止会话固定攻击）
+        $this->destroyAllUserSessions($username);
+        
+        // 2. 生成新会话ID
         $sessionId = $this->generateSessionId();
         $expires = $remember ? time() + (30 * 24 * 3600) : time() + (24 * 3600); // 30天或1天
 
@@ -134,6 +279,36 @@ class AuthController
         // 这里只是保存会话数据，Cookie 会在响应中设置
         
         return $sessionId;
+    }
+    
+    /**
+     * 销毁用户的所有会话（防止会话固定攻击）
+     */
+    private function destroyAllUserSessions(string $username): void
+    {
+        $sessionDir = runtime_path('sessions');
+        if (!is_dir($sessionDir)) {
+            return;
+        }
+        
+        // 遍历所有会话文件
+        foreach (glob($sessionDir . '/*/*.json') as $file) {
+            if (!is_file($file)) {
+                continue;
+            }
+            
+            $content = file_get_contents($file);
+            if ($content === false) {
+                continue;
+            }
+            
+            $data = json_decode($content, true);
+            
+            // 如果会话属于该用户，删除它
+            if (is_array($data) && isset($data['username']) && $data['username'] === $username) {
+                unlink($file);
+            }
+        }
     }
 
     /**
@@ -158,7 +333,7 @@ class AuthController
     }
 
     /**
-     * 获取会话数据
+     * 获取会话数据（修复：加强JSON错误处理和数据结构验证）
      */
     private function getSessionData(string $sessionId): ?array
     {
@@ -167,9 +342,31 @@ class AuthController
             return null;
         }
 
-        $data = json_decode(file_get_contents($sessionFile), true);
-        if (!$data || $data['expires'] < time()) {
-            unlink($sessionFile);
+        $content = file_get_contents($sessionFile);
+        if ($content === false) {
+            return null;
+        }
+        
+        $data = json_decode($content, true);
+        
+        // 验证JSON解码结果和JSON错误
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            // 文件可能被篡改，删除它
+            @unlink($sessionFile);
+            return null;
+        }
+        
+        // 验证数据结构完整性
+        if (!is_array($data) || 
+            !isset($data['username'], $data['login_time'], $data['expires'])) {
+            // 数据不完整，删除文件
+            @unlink($sessionFile);
+            return null;
+        }
+        
+        // 验证过期时间
+        if ($data['expires'] < time()) {
+            @unlink($sessionFile);
             return null;
         }
 
@@ -177,7 +374,7 @@ class AuthController
     }
 
     /**
-     * 保存会话数据
+     * 保存会话数据（修复：加强文件权限和JSON错误处理）
      */
     private function saveSessionData(string $sessionId, array $data): void
     {
@@ -185,10 +382,18 @@ class AuthController
         $sessionDir = dirname($sessionFile);
         
         if (!is_dir($sessionDir)) {
-            mkdir($sessionDir, 0755, true);
+            mkdir($sessionDir, 0700, true); // 更严格的目录权限
         }
 
-        file_put_contents($sessionFile, json_encode($data));
+        // 编码JSON并验证
+        $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE);
+        if ($jsonData === false || json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException('Failed to encode session data: ' . json_last_error_msg());
+        }
+        
+        // 写入文件并设置严格的文件权限（只有所有者可读写）
+        file_put_contents($sessionFile, $jsonData, LOCK_EX);
+        chmod($sessionFile, 0600);
     }
 
     /**
@@ -203,45 +408,253 @@ class AuthController
     }
 
     /**
-     * 获取会话文件路径
+     * 获取会话文件路径（修复：防止路径遍历攻击）
      */
     private function getSessionFilePath(string $sessionId): string
     {
-        return runtime_path('sessions/' . substr($sessionId, 0, 2) . '/' . $sessionId . '.json');
+        // 1. 验证会话ID格式（只允许十六进制字符，64字符长度）
+        if (!preg_match('/^[a-f0-9]{64}$/i', $sessionId)) {
+            throw new \InvalidArgumentException('Invalid session ID format');
+        }
+        
+        // 2. 获取基础目录（使用 realpath 确保路径安全）
+        $baseDir = realpath(runtime_path('sessions'));
+        if ($baseDir === false) {
+            // 如果目录不存在，创建它
+            $baseDir = runtime_path('sessions');
+            if (!is_dir($baseDir)) {
+                mkdir($baseDir, 0700, true);
+            }
+            $baseDir = realpath($baseDir);
+            if ($baseDir === false) {
+                throw new \RuntimeException('Cannot create sessions directory');
+            }
+        }
+        
+        // 3. 构建目标路径
+        $prefix = substr($sessionId, 0, 2);
+        $filename = basename($sessionId . '.json'); // 使用 basename 防止路径遍历
+        
+        $targetDir = $baseDir . '/' . $prefix;
+        $fullPath = $targetDir . '/' . $filename;
+        
+        // 4. 确保目标目录存在
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0700, true);
+        }
+        
+        // 5. 验证最终路径在预期目录内（防止路径遍历）
+        $realFullPath = realpath($fullPath);
+        if ($realFullPath !== false) {
+            // 如果文件已存在，验证它在正确目录
+            if (strpos($realFullPath, $baseDir) !== 0) {
+                throw new \InvalidArgumentException('Path traversal detected in session file path');
+            }
+            return $realFullPath;
+        }
+        
+        // 如果文件不存在，验证将要创建的路径
+        $realTargetDir = realpath($targetDir);
+        if ($realTargetDir === false || strpos($realTargetDir, $baseDir) !== 0) {
+            throw new \InvalidArgumentException('Path traversal detected in session directory');
+        }
+        
+        return $realTargetDir . '/' . $filename;
     }
 
     /**
-     * 获取客户端IP地址
+     * 获取客户端IP地址（修复：加强验证，防止 IP 伪造）
      */
     private function getClientIp(Request $request): string
     {
-        // 检查各种可能的IP头
-        $headers = [
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_REAL_IP',
-            'HTTP_CLIENT_IP',
-            'HTTP_X_FORWARDED',
-            'HTTP_X_CLUSTER_CLIENT_IP',
-            'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',
-            'REMOTE_ADDR'
-        ];
-
-        foreach ($headers as $header) {
-            $ip = $request->header($header);
-            if ($ip && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+        // 1. 获取连接的真实 IP（最可靠）
+        $remoteIp = $request->connection->getRemoteIp() ?? '127.0.0.1';
+        
+        // 2. 验证 IP 格式
+        if (!filter_var($remoteIp, FILTER_VALIDATE_IP)) {
+            return '127.0.0.1';
+        }
+        
+        // 3. 检查是否为可信代理
+        $configManager = new \app\waf\config\ConfigManager();
+        $trustedProxies = $configManager->get('waf.security.trusted_proxies') ?? ['127.0.0.1', '::1'];
+        
+        // 如果不是可信代理，直接返回连接 IP（防止 IP 伪造）
+        if (!in_array($remoteIp, $trustedProxies)) {
+            return $remoteIp;
+        }
+        
+        // 4. 如果是可信代理，才信任代理头
+        $forwardedFor = $request->header('X-Forwarded-For');
+        if ($forwardedFor) {
+            // 取最后一个 IP（最靠近客户端的）
+            $ips = array_map('trim', explode(',', $forwardedFor));
+            $ip = end($ips);
+            
+            // 验证 IP 格式
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
                 return $ip;
             }
         }
-
-        // 如果都没有找到，返回连接IP
-        return $request->connection->getRemoteIp() ?? '127.0.0.1';
+        
+        // 5. 尝试其他代理头（仅当是可信代理时）
+        $realIp = $request->header('X-Real-IP');
+        if ($realIp && filter_var($realIp, FILTER_VALIDATE_IP)) {
+            return $realIp;
+        }
+        
+        // 6. 回退到连接 IP
+        return $remoteIp;
     }
 
     /**
-     * 生成登录页面HTML
+     * 登录失败限制相关方法
      */
-    private function generateLoginPage(): string
+    private function isIpBlocked(string $ip): bool
+    {
+        if (!$this->redis) {
+            return $this->isIpBlockedFile($ip);
+        }
+        
+        try {
+            $blockedUntil = $this->redis->get("ip_blocked:{$ip}");
+            if ($blockedUntil && $blockedUntil > time()) {
+                return true;
+            }
+        } catch (\Exception $e) {
+            return $this->isIpBlockedFile($ip);
+        }
+        
+        return false;
+    }
+    
+    private function isIpBlockedFile(string $ip): bool
+    {
+        $blockFile = runtime_path("ip_blocks/{$ip}.json");
+        if (!file_exists($blockFile)) {
+            return false;
+        }
+        
+        $data = @json_decode(file_get_contents($blockFile), true);
+        if ($data && isset($data['blocked_until']) && $data['blocked_until'] > time()) {
+            return true;
+        }
+        
+        @unlink($blockFile);
+        return false;
+    }
+    
+    private function blockIp(string $ip, int $duration): void
+    {
+        $blockedUntil = time() + $duration;
+        
+        if ($this->redis) {
+            try {
+                $this->redis->setex("ip_blocked:{$ip}", $duration, $blockedUntil);
+                return;
+            } catch (\Exception $e) {
+                // Redis 失败时使用文件存储
+            }
+        }
+        
+        // 文件存储
+        $blockFile = runtime_path("ip_blocks/{$ip}.json");
+        $blockDir = dirname($blockFile);
+        if (!is_dir($blockDir)) {
+            mkdir($blockDir, 0700, true);
+        }
+        
+        file_put_contents($blockFile, json_encode([
+            'ip' => $ip,
+            'blocked_until' => $blockedUntil,
+            'blocked_at' => time(),
+        ]), LOCK_EX);
+        chmod($blockFile, 0600);
+    }
+    
+    private function recordLoginAttempt(string $ip, string $username): void
+    {
+        // 记录登录尝试（用于审计）
+        $key = "login_attempt:{$ip}:{$username}";
+        $attempt = [
+            'ip' => $ip,
+            'username' => $username,
+            'timestamp' => time(),
+        ];
+        
+        if ($this->redis) {
+            try {
+                $this->redis->lpush("login_attempts", json_encode($attempt));
+                $this->redis->ltrim("login_attempts", 0, 999); // 只保留最近1000条
+                return;
+            } catch (\Exception $e) {
+                // Redis 失败时使用文件存储
+            }
+        }
+        
+        // 文件存储
+        $logFile = runtime_path("logs/login_attempts.log");
+        file_put_contents($logFile, json_encode($attempt) . PHP_EOL, FILE_APPEND | LOCK_EX);
+    }
+    
+    private function incrementFailedAttempts(string $ip, string $username): int
+    {
+        $key = "failed_attempts:{$ip}:{$username}";
+        
+        if ($this->redis) {
+            try {
+                $count = $this->redis->incr($key);
+                $this->redis->expire($key, 3600); // 1小时过期
+                return $count;
+            } catch (\Exception $e) {
+                // Redis 失败时使用文件存储
+            }
+        }
+        
+        // 文件存储
+        $failFile = runtime_path("failed_logins/{$ip}_{$username}.txt");
+        $failDir = dirname($failFile);
+        if (!is_dir($failDir)) {
+            mkdir($failDir, 0700, true);
+        }
+        
+        $count = 1;
+        if (file_exists($failFile)) {
+            $count = (int)file_get_contents($failFile) + 1;
+        }
+        
+        file_put_contents($failFile, (string)$count, LOCK_EX);
+        
+        // 设置过期时间（1小时后删除）
+        touch($failFile, time() + 3600);
+        
+        return $count;
+    }
+    
+    private function clearFailedAttempts(string $ip, string $username): void
+    {
+        $key = "failed_attempts:{$ip}:{$username}";
+        
+        if ($this->redis) {
+            try {
+                $this->redis->del($key);
+                return;
+            } catch (\Exception $e) {
+                // Redis 失败时使用文件存储
+            }
+        }
+        
+        // 文件存储
+        $failFile = runtime_path("failed_logins/{$ip}_{$username}.txt");
+        if (file_exists($failFile)) {
+            @unlink($failFile);
+        }
+    }
+
+    /**
+     * 生成登录页面HTML（修复：添加 CSRF Token）
+     */
+    private function generateLoginPage(string $csrfToken = ''): string
     {
         return '<!DOCTYPE html>
 <html lang="zh-CN">
@@ -475,6 +888,7 @@ class AuthController
         <div class="success-message" id="successMessage"></div>
         
         <form class="login-form" id="loginForm">
+            <input type="hidden" name="_token" value="' . htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') . '" id="csrfToken">
             <div class="form-group">
                 <label class="form-label" for="username">用户名</label>
                 <input 
@@ -516,12 +930,7 @@ class AuthController
             <span style="margin-left: 10px;">正在登录...</span>
         </div>
         
-        <div class="demo-accounts">
-            <h4>演示账户</h4>
-            <p><strong>管理员:</strong> admin / admin123</p>
-            <p><strong>WAF管理员:</strong> waf / waf2024</p>
-            <p><strong>天罡管理员:</strong> tiangang / tiangang2024</p>
-        </div>
+        <!-- 默认账户提示已移除，生产环境不应显示 -->
         
         <div class="login-footer">
             <p>© 2024 天罡 WAF. 专业Web应用防火墙</p>
@@ -555,12 +964,14 @@ class AuthController
                 successMessage.style.display = \'none\';
                 
                 try {
+                    const csrfToken = document.getElementById(\'csrfToken\').value;
                     const response = await fetch(\'/admin/auth/login\', {
                         method: \'POST\',
                         headers: {
                             \'Content-Type\': \'application/x-www-form-urlencoded\',
+                            \'X-CSRF-Token\': csrfToken,
                         },
-                        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&remember=${remember}`
+                        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&remember=${remember}&_token=${encodeURIComponent(csrfToken)}`
                     });
                     
                     const result = await response.json();

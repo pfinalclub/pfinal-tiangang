@@ -23,7 +23,7 @@ class PluginManager
     }
     
     /**
-     * 加载所有插件
+     * 加载所有插件（修复：加强路径验证）
      */
     private function loadPlugins(): void
     {
@@ -31,22 +31,76 @@ class PluginManager
             return;
         }
         
-        foreach (glob($this->pluginPath . '/*.php') as $pluginFile) {
-            $this->loadPlugin($pluginFile);
+        // 获取真实路径
+        $realPluginPath = realpath($this->pluginPath);
+        if ($realPluginPath === false) {
+            error_log('Plugin directory does not exist: ' . $this->pluginPath);
+            return;
+        }
+        
+        // 使用 glob 查找插件文件，但进一步验证每个文件
+        $pluginFiles = glob($realPluginPath . '/*.php');
+        if ($pluginFiles === false) {
+            return;
+        }
+        
+        foreach ($pluginFiles as $pluginFile) {
+            // 再次验证文件在允许的目录内（防御深度）
+            $realFile = realpath($pluginFile);
+            if ($realFile !== false && strpos($realFile, $realPluginPath) === 0) {
+                $this->loadPlugin($realFile);
+            } else {
+                error_log('Skipping invalid plugin file path: ' . $pluginFile);
+            }
         }
     }
     
     /**
-     * 加载单个插件
+     * 加载单个插件（修复：加强路径验证，防止路径遍历和任意文件包含）
      */
     private function loadPlugin(string $pluginFile): void
     {
         try {
-            // 包含插件文件
-            require_once $pluginFile;
+            // 1. 验证文件路径（防止路径遍历）
+            $realPluginPath = realpath($this->pluginPath);
+            if ($realPluginPath === false) {
+                throw new \RuntimeException('Plugin directory does not exist: ' . $this->pluginPath);
+            }
             
-            // 动态加载插件类
-            $className = $this->getClassNameFromFile($pluginFile);
+            $realPluginFile = realpath($pluginFile);
+            if ($realPluginFile === false) {
+                throw new \RuntimeException('Plugin file does not exist: ' . $pluginFile);
+            }
+            
+            // 2. 验证文件在允许的插件目录内
+            if (strpos($realPluginFile, $realPluginPath) !== 0) {
+                throw new \InvalidArgumentException('Plugin file path is outside allowed directory. Attempted: ' . $pluginFile);
+            }
+            
+            // 3. 验证文件扩展名
+            if (pathinfo($pluginFile, PATHINFO_EXTENSION) !== 'php') {
+                throw new \InvalidArgumentException('Plugin file must be a PHP file: ' . $pluginFile);
+            }
+            
+            // 4. 验证文件可读
+            if (!is_readable($realPluginFile)) {
+                throw new \RuntimeException('Plugin file is not readable: ' . $pluginFile);
+            }
+            
+            // 5. 验证文件不是符号链接（防止通过符号链接访问其他目录）
+            if (is_link($realPluginFile)) {
+                $linkTarget = readlink($realPluginFile);
+                $realLinkTarget = realpath($linkTarget);
+                if ($realLinkTarget === false || strpos($realLinkTarget, $realPluginPath) !== 0) {
+                    throw new \InvalidArgumentException('Plugin file is a symlink pointing outside allowed directory');
+                }
+            }
+            
+            // 6. 包含插件文件（现在相对安全）
+            require_once $realPluginFile;
+            
+            // 7. 动态加载插件类
+            $className = $this->getClassNameFromFile($realPluginFile);
             if ($className && class_exists($className)) {
                 $plugin = new $className();
                 
@@ -55,18 +109,33 @@ class PluginManager
                 }
             }
         } catch (\Exception $e) {
-            // 记录插件加载错误
-            error_log("Failed to load plugin {$pluginFile}: " . $e->getMessage());
+            // 记录插件加载错误（记录真实路径而非用户提供的路径）
+            error_log(sprintf(
+                'Failed to load plugin [%s]: %s',
+                basename($pluginFile),
+                $e->getMessage()
+            ));
         }
     }
     
     /**
-     * 从文件路径获取类名
+     * 从文件路径获取类名（修复：加强验证）
      */
     private function getClassNameFromFile(string $pluginFile): ?string
     {
+        // 验证文件路径
+        if (!is_readable($pluginFile)) {
+            return null;
+        }
+        
         $content = file_get_contents($pluginFile);
         if (!$content) {
+            return null;
+        }
+        
+        // 限制文件大小（防止读取超大文件）
+        if (strlen($content) > 1024 * 1024) { // 1MB
+            error_log('Plugin file too large: ' . basename($pluginFile));
             return null;
         }
         
@@ -74,14 +143,14 @@ class PluginManager
         $namespace = '';
         $className = '';
         
-        // 提取命名空间
-        if (preg_match('/namespace\s+([^;]+);/', $content, $matches)) {
-            $namespace = $matches[1];
+        // 提取命名空间（验证格式）
+        if (preg_match('/namespace\s+([a-zA-Z0-9\\\\_]+);/', $content, $matches)) {
+            $namespace = trim($matches[1]);
         }
         
-        // 提取类名
-        if (preg_match('/class\s+(\w+)/', $content, $matches)) {
-            $className = $matches[1];
+        // 提取类名（验证格式）
+        if (preg_match('/class\s+([a-zA-Z0-9_]+)/', $content, $matches)) {
+            $className = trim($matches[1]);
         }
         
         if ($className) {

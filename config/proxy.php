@@ -118,7 +118,13 @@ return [
         'blocked_headers' => [
             'X-Forwarded-For',
             'X-Real-IP'
-        ]
+        ],
+        // SSRF 防护配置
+        'allowed_backend_hosts' => !empty(env('ALLOWED_BACKEND_HOSTS', ''))
+            ? array_map('trim', explode(',', env('ALLOWED_BACKEND_HOSTS', '')))
+            : [],
+        'allowed_schemes' => ['http', 'https'], // 只允许 http 和 https
+        'block_private_ips' => env('BLOCK_PRIVATE_IPS', true), // 阻止访问私有 IP
     ],
     
     // 日志配置
