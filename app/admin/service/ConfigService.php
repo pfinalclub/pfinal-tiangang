@@ -230,8 +230,18 @@ class ConfigService extends BaseService
             }
         }
         
-        // 验证后端是否存在
-        $this->validateBackendExists($data['backend']);
+        $backend = trim($data['backend']);
+        
+        // 如果 backend 是 URL 格式，直接使用；否则验证后端是否存在
+        if (filter_var($backend, FILTER_VALIDATE_URL)) {
+            // 验证 URL 格式
+            if (!preg_match('/^https?:\/\//', $backend)) {
+                throw new \InvalidArgumentException('Backend URL must start with http:// or https://');
+            }
+        } else {
+            // 验证后端服务是否存在
+            $this->validateBackendExists($backend);
+        }
         
         // 读取现有映射
         $proxyConfig = $this->getProxyConfig();
@@ -243,7 +253,7 @@ class ConfigService extends BaseService
         if ($index !== null) {
             // 更新现有映射
             $mappings[$index] = array_merge($mappings[$index], [
-                'backend' => $data['backend'],
+                'backend' => $backend,
                 'waf_rules' => $data['waf_rules'] ?? [],
                 'enabled' => $data['enabled'] ?? true,
             ]);
@@ -251,7 +261,7 @@ class ConfigService extends BaseService
             // 添加新映射
             $mappings[] = [
                 'domain' => $domain,
-                'backend' => $data['backend'],
+                'backend' => $backend,
                 'waf_rules' => $data['waf_rules'] ?? [],
                 'enabled' => $data['enabled'] ?? true,
             ];

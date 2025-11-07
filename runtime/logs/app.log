@@ -231,3 +231,49 @@
 [2025-11-07 10:31:50] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
 [2025-11-07 10:32:14] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
 [2025-11-07 10:32:15] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
+[2025-11-07 10:53:28] error: Unexpected proxy error {"url":"\/","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
+[2025-11-07 10:53:31] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
+[2025-11-07 10:53:31] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
+[2025-11-07 10:59:38] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"34.92ms","size":1}
+[2025-11-07 11:00:29] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"23.38ms","size":1}
+[2025-11-07 11:02:12] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"50.25ms","size":1}
+[2025-11-07 11:02:16] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"22.51ms","size":1}
+[2025-11-07 11:03:01] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"105.77ms","size":1}
+[2025-11-07 11:03:01] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"50.64ms","size":6446}
+[2025-11-07 11:03:01] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"25.7ms","size":1}
+[2025-11-07 11:03:02] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"69.16ms","size":6446}
+[2025-11-07 11:06:29] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"59.79ms","size":1}
+[2025-11-07 11:06:30] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"40.12ms","size":6446}
+[2025-11-07 11:06:30] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"17.61ms","size":1}
+[2025-11-07 11:06:30] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"50.69ms","size":6446}
+[2025-11-07 11:08:28] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"23.95ms","size":1}
+[2025-11-07 11:08:40] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"394.52ms","size":111386}
+[2025-11-07 11:08:41] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"556.6ms","size":111386}
+[2025-11-07 11:08:41] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"233.03ms","size":50}
+[2025-11-07 11:08:41] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"340.07ms","size":533}
+[2025-11-07 11:08:41] info: Proxy performance {"url":"\/index.php","method":"POST","status_code":200,"duration":"281.75ms","size":40}
+[2025-11-07 11:08:41] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"73.62ms","size":830}
+[2025-11-07 11:08:46] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"21.05ms","size":1}
+[2025-11-07 11:08:46] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"29.18ms","size":6446}
+[2025-11-07 11:08:46] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"55.29ms","size":1}
+[2025-11-07 11:08:46] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"28.51ms","size":6446}
+[2025-11-07 11:08:48] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"16.42ms","size":1}
+[2025-11-07 11:08:48] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"31.37ms","size":6446}
+[2025-11-07 11:08:49] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"15.77ms","size":1}
+[2025-11-07 11:08:49] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"31.98ms","size":6446}
+[2025-11-07 11:08:49] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"13.49ms","size":1}
+[2025-11-07 11:08:49] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"56.58ms","size":6446}
+[2025-11-07 11:08:52] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"14.04ms","size":1}
+[2025-11-07 11:08:52] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"28.53ms","size":6446}
+[2025-11-07 11:08:54] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"15.25ms","size":1}
+[2025-11-07 11:08:54] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"31.82ms","size":6446}
+[2025-11-07 11:08:54] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"15.35ms","size":1}
+[2025-11-07 11:08:54] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"30.68ms","size":6446}
+[2025-11-07 11:08:54] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"14.1ms","size":1}
+[2025-11-07 11:08:54] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"27.41ms","size":6446}
+[2025-11-07 11:09:04] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"752.54ms","size":210301}
+[2025-11-07 11:09:04] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"387.11ms","size":111386}
+[2025-11-07 11:09:04] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"133.43ms","size":50}
+[2025-11-07 11:09:04] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"240.23ms","size":533}
+[2025-11-07 11:09:09] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"36.64ms","size":1}
+[2025-11-07 11:09:22] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"115.14ms","size":533}

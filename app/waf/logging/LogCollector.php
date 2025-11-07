@@ -70,7 +70,7 @@ class LogCollector
     /**
      * 记录错误日志
      */
-    public function logError(Request $request, \Exception $e): void
+    public function logError(Request $request, \Throwable $e): void
     {
         $logData = [
             'timestamp' => time(),

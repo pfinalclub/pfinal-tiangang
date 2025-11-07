@@ -15,6 +15,11 @@ $sqlChecked = in_array('sql_injection', $wafRules) ? 'checked' : '';
 $xssChecked = in_array('xss', $wafRules) ? 'checked' : '';
 $rateLimitChecked = in_array('rate_limit', $wafRules) ? 'checked' : '';
 $ipBlacklistChecked = in_array('ip_blacklist', $wafRules) ? 'checked' : '';
+
+// 判断当前 backend 是 URL 还是 name
+$currentBackend = $isEdit && $mapping ? ($mapping['backend'] ?? '') : '';
+$isBackendUrl = !empty($currentBackend) && filter_var($currentBackend, FILTER_VALIDATE_URL);
+$backendType = $isBackendUrl ? 'direct' : 'select';
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -74,20 +79,36 @@ $ipBlacklistChecked = in_array('ip_blacklist', $wafRules) ? 'checked' : '';
         
         <div class="form-item">
             <label class="form-label">后端服务 <span style="color: red;">*</span></label>
-            <select name="backend" class="form-input" required>
+            <div style="margin-bottom: 10px;">
+                <input type="radio" name="backend_type" value="select" id="backend_type_select" <?= $backendType === 'select' ? 'checked' : '' ?> onchange="toggleBackendInput()">
+                <label for="backend_type_select" style="margin-right: 20px; margin-left: 5px;">选择已有后端服务</label>
+                <input type="radio" name="backend_type" value="direct" id="backend_type_direct" <?= $backendType === 'direct' ? 'checked' : '' ?> onchange="toggleBackendInput()">
+                <label for="backend_type_direct" style="margin-left: 5px;">直接输入 URL</label>
+            </div>
+            
+            <!-- 选择已有后端服务 -->
+            <select name="backend" id="backend_select" class="form-input" <?= $backendType === 'select' ? 'required' : '' ?> style="<?= $backendType === 'direct' ? 'display: none;' : '' ?>">
                 <option value="">请选择后端服务</option>
                 <?php foreach ($backends as $backend): ?>
                     <?php
                     $name = $backend['name'] ?? '';
                     if (empty($name)) continue;
-                    $selected = ($isEdit && $mapping && ($mapping['backend'] ?? '') === $name) ? 'selected' : '';
+                    $selected = ($isEdit && $mapping && !$isBackendUrl && ($mapping['backend'] ?? '') === $name) ? 'selected' : '';
                     $url = $backend['url'] ?? '';
                     $displayName = $name . ($url ? ' (' . htmlspecialchars($url) . ')' : '');
                     ?>
                     <option value="<?= htmlspecialchars($name) ?>" <?= $selected ?>><?= htmlspecialchars($displayName) ?></option>
                 <?php endforeach; ?>
             </select>
-            <div class="form-tip">选择该域名要路由到的后端服务</div>
+            
+            <!-- 直接输入 URL -->
+            <input type="text" name="backend_url" id="backend_url" class="form-input" 
+                   placeholder="例如: http://192.168.1.100:8080 或 https://api.example.com" 
+                   style="<?= $backendType === 'select' ? 'display: none;' : '' ?>"
+                   value="<?= $isBackendUrl ? htmlspecialchars($currentBackend) : '' ?>"
+                   <?= $backendType === 'direct' ? 'required' : '' ?>>
+            
+            <div class="form-tip">选择该域名要路由到的后端服务，或直接输入后端服务的 URL（IP:端口）</div>
         </div>
         
         <div class="form-item">
@@ -131,9 +152,54 @@ $ipBlacklistChecked = in_array('ip_blacklist', $wafRules) ? 'checked' : '';
     <script>
         var layer = layui.layer;
         
+        function toggleBackendInput() {
+            var backendType = document.querySelector('input[name="backend_type"]:checked').value;
+            var selectInput = document.getElementById('backend_select');
+            var urlInput = document.getElementById('backend_url');
+            
+            if (backendType === 'select') {
+                selectInput.style.display = 'block';
+                selectInput.required = true;
+                urlInput.style.display = 'none';
+                urlInput.required = false;
+                urlInput.value = ''; // 清空 URL 输入
+            } else {
+                selectInput.style.display = 'none';
+                selectInput.required = false;
+                selectInput.value = ''; // 清空选择
+                urlInput.style.display = 'block';
+                urlInput.required = true;
+            }
+        }
+        
         function submitForm() {
             var form = document.getElementById("domain-form");
             var formData = new FormData(form);
+            
+            // 处理后端服务选择
+            var backendType = document.querySelector('input[name="backend_type"]:checked').value;
+            var backendValue = '';
+            
+            if (backendType === 'direct') {
+                var backendUrl = document.getElementById('backend_url').value.trim();
+                if (!backendUrl) {
+                    layer.msg('请输入后端服务 URL', {icon: 2});
+                    return;
+                }
+                // 验证 URL 格式
+                if (!/^https?:\/\/.+/.test(backendUrl)) {
+                    layer.msg('URL 格式不正确，必须以 http:// 或 https:// 开头', {icon: 2});
+                    return;
+                }
+                backendValue = backendUrl;
+            } else {
+                var backendSelect = document.getElementById('backend_select').value;
+                if (!backendSelect) {
+                    layer.msg('请选择后端服务', {icon: 2});
+                    return;
+                }
+                backendValue = backendSelect;
+            }
             
             // 处理复选框数组
             var wafRules = [];
@@ -151,6 +217,11 @@ $ipBlacklistChecked = in_array('ip_blacklist', $wafRules) ? 'checked' : '';
                 var key = pair[0];
                 var value = pair[1];
                 
+                // 跳过 backend_type 和 backend_url，使用我们处理后的 backendValue
+                if (key === 'backend_type' || key === 'backend_url') {
+                    continue;
+                }
+                
                 if (key.endsWith('[]')) {
                     key = key.slice(0, -2);
                     if (!data[key]) {
@@ -161,6 +232,9 @@ $ipBlacklistChecked = in_array('ip_blacklist', $wafRules) ? 'checked' : '';
                     data[key] = value;
                 }
             }
+            
+            // 设置后端服务值
+            data.backend = backendValue;
             
             // enabled 复选框处理
             data.enabled = document.getElementById("enabled").checked;
@@ -195,6 +269,11 @@ $ipBlacklistChecked = in_array('ip_blacklist', $wafRules) ? 'checked' : '';
             var index = parent.layer.getFrameIndex(window.name);
             parent.layer.close(index);
         }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            toggleBackendInput();
+        };
     </script>
 </body>
 </html>

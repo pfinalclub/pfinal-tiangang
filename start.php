@@ -36,10 +36,16 @@ $worker->onMessage = function ($connection, Request $request) {
         // 同步处理请求（稳定可靠）
         $response = $gateway->handle($request);
         
+        // 确保响应是有效的 Response 对象
+        if (!($response instanceof Response)) {
+            throw new \RuntimeException('Invalid response from gateway');
+        }
+        
         // 发送响应
         $connection->send($response);
         
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
+        // 捕获所有类型的错误（包括 Error 和 Exception）
         // 错误处理（修复：区分生产/开发环境，防止信息泄露）
         $isDebug = env('APP_DEBUG', false) && env('APP_ENV', 'production') !== 'production';
         
@@ -56,7 +62,7 @@ $worker->onMessage = function ($connection, Request $request) {
         $requestId = uniqid('req_', true);
         
         $errorResponse = new Response(500, [
-            'Content-Type' => 'application/json',
+            'Content-Type' => 'application/json; charset=utf-8',
         ], json_encode([
             'error' => 'Internal Server Error',
             'message' => $isDebug 
@@ -64,7 +70,7 @@ $worker->onMessage = function ($connection, Request $request) {
                 : 'An unexpected error occurred. Please contact support.',
             'request_id' => $requestId,
             'timestamp' => time(),
-        ]));
+        ], JSON_UNESCAPED_SLASHES));
         
         $connection->send($errorResponse);
     }

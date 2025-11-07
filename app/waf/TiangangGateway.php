@@ -79,12 +79,18 @@ class TiangangGateway
             // 同步代理转发（核心功能，必须同步）
             $response = $this->proxyHandler->forwardSync($request);
             
+            // 确保响应是有效的 Response 对象
+            if (!($response instanceof Response)) {
+                throw new \RuntimeException('Invalid response from proxy handler');
+            }
+            
             // 异步记录成功日志（后台任务）
             $this->queueAsyncLog($request, $wafResult, microtime(true) - $startTime);
             
             return $response;
             
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // 捕获所有类型的错误（包括 Error 和 Exception）
             // 异步记录错误日志（后台任务）
             $this->queueAsyncErrorLog($request, $e);
             
@@ -145,7 +151,7 @@ class TiangangGateway
     /**
      * 异步记录错误日志
      */
-    private function asyncErrorLog(Request $request, \Exception $e): \Generator
+    private function asyncErrorLog(Request $request, \Throwable $e): \Generator
     {
         yield $this->logCollector->logError($request, $e);
     }
@@ -278,7 +284,7 @@ class TiangangGateway
     /**
      * 创建错误响应（修复：区分生产/开发环境，防止信息泄露）
      */
-    private function createErrorResponse(\Exception $e): Response
+    private function createErrorResponse(\Throwable $e): Response
     {
         $isDebug = env('APP_DEBUG', false) && env('APP_ENV', 'production') !== 'production';
         
@@ -295,7 +301,7 @@ class TiangangGateway
         $requestId = uniqid('req_', true);
         
         return new Response(500, [
-            'Content-Type' => 'application/json',
+            'Content-Type' => 'application/json; charset=utf-8',
         ], json_encode([
             'error' => 'Internal Server Error',
             'message' => $isDebug 
@@ -303,7 +309,7 @@ class TiangangGateway
                 : 'An unexpected error occurred. Please contact support.',
             'request_id' => $requestId,
             'timestamp' => time(),
-        ]));
+        ], JSON_UNESCAPED_SLASHES));
     }
     
     /**
@@ -327,7 +333,7 @@ class TiangangGateway
      * - 移除 fastcgi_finish_request()（Workerman 不是 FastCGI）
      * - Workerman 本身就是异步的，直接执行异步任务即可
      */
-    private function queueAsyncErrorLog(Request $request, \Exception $e): void
+    private function queueAsyncErrorLog(Request $request, \Throwable $e): void
     {
         // Workerman 本身就是异步事件驱动的，直接执行异步任务
         // 不需要 fastcgi_finish_request()（那是 FastCGI 专用的）
@@ -336,12 +342,69 @@ class TiangangGateway
     
     /**
      * 检查是否为管理界面请求
+     * 
+     * 修复：正确识别业务域名和管理界面
+     * - 如果请求的域名在域名映射配置中，说明是业务域名，不是管理界面
+     * - 只有管理域名（localhost, 127.0.0.1）下的特定路径才是管理界面
      */
     private function isWebRequest(Request $request): bool
     {
         $path = $request->path();
+        $host = $request->header('Host', '');
+        
+        // 移除端口号（如果有）
+        $host = preg_replace('/:\d+$/', '', $host);
+        $host = strtolower($host);
+        
+        try {
+            // 检查该域名是否在域名映射配置中
+            // 如果在，说明是业务域名，不是管理界面
+            $proxyConfig = $this->configManager->get('proxy') ?? [];
+            $domainMappings = $proxyConfig['domain_mappings'] ?? [];
+            
+            foreach ($domainMappings as $mapping) {
+                if (!($mapping['enabled'] ?? true)) {
+                    continue;
+                }
+                
+                $domain = $mapping['domain'] ?? '';
+                if (empty($domain)) {
+                    continue;
+                }
+                
+                // 精确匹配
+                if (strtolower($domain) === $host) {
+                    return false; // 这是业务域名，不是管理界面
+                }
+                
+                // 通配符匹配（如 *.api.smm.cn）
+                if (strpos($domain, '*') === 0) {
+                    $pattern = str_replace(['.', '*'], ['\.', '.*'], $domain);
+                    $pattern = '/^' . $pattern . '$/i';
+                    if (preg_match($pattern, $host)) {
+                        return false; // 这是业务域名，不是管理界面
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // 如果配置加载失败，记录错误但继续处理
+            error_log('Failed to load proxy config in isWebRequest: ' . $e->getMessage());
+        }
+        
+        // 管理界面的域名列表（只有这些域名的请求才被认为是管理界面）
+        $adminHosts = [
+            'localhost',
+            '127.0.0.1',
+            '::1',
+        ];
+        
+        // 如果 Host 不在管理域名列表中，不是管理界面请求
+        if (!in_array($host, $adminHosts)) {
+            return false; // 未知域名，默认不是管理界面
+        }
+        
+        // 检查路径是否为管理界面路径
         $webPaths = [
-            '/',
             '/dashboard',
             '/admin',
             '/admin/',
@@ -351,6 +414,11 @@ class TiangangGateway
             '/api/export',
             '/health'
         ];
+        
+        // 根路径 '/' 只有在管理域名下才被认为是管理界面
+        if ($path === '/') {
+            return true; // 管理域名下的根路径，重定向到管理界面
+        }
         
         return in_array($path, $webPaths) || 
                str_starts_with($path, '/api/') || 

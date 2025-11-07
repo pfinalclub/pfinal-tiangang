@@ -107,7 +107,7 @@ class ProxyHandler
     private function asyncBuildTargetUrl(Request $request): \Generator
     {
         // 模拟异步 URL 构建
-        yield sleep(0.001);
+        yield sleep(0); // 修复：sleep 需要整数
         
         // 使用同步方法构建 URL（已支持路径映射）
         return $this->buildTargetUrl($request);
@@ -119,7 +119,7 @@ class ProxyHandler
     private function asyncBuildRequestOptions(Request $request): \Generator
     {
         // 模拟异步选项构建
-        yield sleep(0.001);
+        yield sleep(0); // 修复：sleep 需要整数
         
         $options = [
             'timeout' => $this->backendConfig['timeout'] ?? 30,
@@ -146,7 +146,7 @@ class ProxyHandler
     private function asyncHttpRequest(Request $request, string $targetUrl, array $options): \Generator
     {
         // 模拟异步 HTTP 请求
-        yield sleep(0.01);
+        yield sleep(0); // 修复：sleep 需要整数
         
         return $this->httpClient->request(
             $request->method(),
@@ -161,7 +161,7 @@ class ProxyHandler
     private function asyncProcessResponse($response, Request $request): \Generator
     {
         // 模拟异步响应处理
-        yield sleep(0.002);
+        yield sleep(0); // 修复：sleep 需要整数
         
         $statusCode = $response->getStatusCode();
         $headers = $this->filterResponseHeaders($response->getHeaders());
@@ -183,15 +183,26 @@ class ProxyHandler
     private function asyncLogPerformance(Request $request, Response $response, float $duration): \Generator
     {
         // 模拟异步日志记录
-        yield sleep(0.001);
+        yield sleep(0); // 修复：sleep 需要整数，使用 0 表示不等待
         
-        logger('info', 'Proxy performance', [
-            'url' => $request->path(),
-            'method' => $request->method(),
-            'status_code' => $response->getStatusCode(),
-            'duration' => round($duration * 1000, 2) . 'ms',
-            'size' => strlen($response->getBody())
-        ]);
+        try {
+            // Workerman Response 对象使用 rawBody() 方法获取 body
+            $body = method_exists($response, 'rawBody') ? $response->rawBody() : (string)$response;
+            $bodySize = strlen($body);
+            
+            if (function_exists('logger')) {
+                logger('info', 'Proxy performance', [
+                    'url' => $request->path(),
+                    'method' => $request->method(),
+                    'status_code' => $response->getStatusCode(),
+                    'duration' => round($duration * 1000, 2) . 'ms',
+                    'size' => $bodySize
+                ]);
+            }
+        } catch (\Exception $e) {
+            // 日志记录失败，静默处理
+            error_log('Failed to log performance: ' . $e->getMessage());
+        }
     }
     
     /**
@@ -200,6 +211,12 @@ class ProxyHandler
     private function buildTargetUrl(Request $request): string
     {
         $backend = $this->getBackendConfig($request);
+        
+        // 检查后端配置是否有效
+        if (empty($backend) || !isset($backend['url'])) {
+            throw new \RuntimeException('Backend configuration is invalid or missing URL');
+        }
+        
         $baseUrl = $backend['url'];
         
         // 1. 验证基础 URL
@@ -231,9 +248,18 @@ class ProxyHandler
         // 4. 阻止私有 IP（如果启用）
         $blockPrivateIps = $this->backendConfig['security']['block_private_ips'] ?? true;
         if ($blockPrivateIps) {
-            $hostIp = gethostbyname($baseHost);
-            if ($hostIp !== $baseHost && !filter_var($hostIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            // 允许 localhost 和 127.0.0.1（用于本地开发）
+            $allowedLocalHosts = ['localhost', '127.0.0.1', '::1'];
+            if (!in_array(strtolower($baseHost), $allowedLocalHosts)) {
+                try {
+                    $hostIp = @gethostbyname($baseHost);
+                    if ($hostIp && $hostIp !== $baseHost && !filter_var($hostIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
                 throw new \InvalidArgumentException('SSRF attempt detected: Private IP address not allowed');
+                    }
+                } catch (\Exception $e) {
+                    // DNS 解析失败，记录日志但允许继续（可能是网络问题）
+                    error_log('DNS resolution failed for ' . $baseHost . ': ' . $e->getMessage());
+                }
             }
         }
         
@@ -280,9 +306,18 @@ class ProxyHandler
             
             // 验证目标主机不为私有 IP（如果启用）
             if ($blockPrivateIps) {
-                $targetIp = gethostbyname($targetHost);
-                if ($targetIp !== $targetHost && !filter_var($targetIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    throw new \InvalidArgumentException('SSRF attempt detected: Target resolves to private IP');
+                // 允许 localhost 和 127.0.0.1（用于本地开发）
+                $allowedLocalHosts = ['localhost', '127.0.0.1', '::1'];
+                if (!in_array(strtolower($targetHost), $allowedLocalHosts)) {
+                    try {
+                        $targetIp = @gethostbyname($targetHost);
+                        if ($targetIp && $targetIp !== $targetHost && !filter_var($targetIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                            throw new \InvalidArgumentException('SSRF attempt detected: Target resolves to private IP');
+                        }
+                    } catch (\Exception $e) {
+                        // DNS 解析失败，记录日志但允许继续（可能是网络问题）
+                        error_log('DNS resolution failed for ' . $targetHost . ': ' . $e->getMessage());
+                    }
                 }
             }
         }
@@ -419,7 +454,8 @@ class ProxyHandler
             'upgrade',
             'proxy-connection',
             'transfer-encoding',
-            'content-encoding'
+            'content-encoding',
+            'server' // 隐藏后端服务器信息，使用 WAF 的 Server 头
         ];
         
         foreach ($headers as $name => $values) {
@@ -428,6 +464,9 @@ class ProxyHandler
                 $filteredHeaders[$name] = is_array($values) ? $values[0] : $values;
             }
         }
+        
+        // 添加 WAF 的 Server 头（可选）
+        // $filteredHeaders['Server'] = 'Tiangang-WAF/1.0';
         
         return $filteredHeaders;
     }
@@ -487,12 +526,20 @@ class ProxyHandler
             $message = $e->getMessage();
         }
         
-        logger('error', 'Proxy error', [
-            'url' => $request->path(),
-            'method' => $request->method(),
-            'error' => $e->getMessage(),
-            'status_code' => $statusCode
-        ]);
+        try {
+            if (function_exists('logger')) {
+                logger('error', 'Proxy error', [
+                    'url' => $request->path(),
+                    'method' => $request->method(),
+                    'error' => $e->getMessage(),
+                    'status_code' => $statusCode
+                ]);
+            } else {
+                error_log('Proxy error: ' . $e->getMessage() . ' for ' . $request->method() . ' ' . $request->path());
+            }
+        } catch (\Exception $logError) {
+            error_log('Proxy error: ' . $e->getMessage() . ' for ' . $request->method() . ' ' . $request->path());
+        }
         
         return new Response($statusCode, [
             'Content-Type' => 'application/json',
@@ -511,14 +558,23 @@ class ProxyHandler
         $isDebug = env('APP_DEBUG', false) && env('APP_ENV', 'production') !== 'production';
         
         // 记录详细错误到日志（不返回给客户端）
-        logger('error', 'Unexpected proxy error', [
-            'url' => $request->path(),
-            'method' => $request->method(),
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            'trace' => $isDebug ? $e->getTraceAsString() : null, // 生产环境不记录堆栈
-        ]);
+        try {
+            if (function_exists('logger')) {
+                logger('error', 'Unexpected proxy error', [
+                    'url' => $request->path(),
+                    'method' => $request->method(),
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $isDebug ? $e->getTraceAsString() : null, // 生产环境不记录堆栈
+                ]);
+            } else {
+                error_log('Unexpected proxy error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            }
+        } catch (\Exception $logError) {
+            // 日志记录失败，使用 error_log 作为后备
+            error_log('Unexpected proxy error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        }
         
         // 生成请求ID用于追踪
         $requestId = uniqid('req_', true);
@@ -540,13 +596,24 @@ class ProxyHandler
      */
     private function logPerformance(Request $request, Response $response, float $duration): void
     {
-        logger('info', 'Proxy performance', [
-            'url' => $request->path(),
-            'method' => $request->method(),
-            'status_code' => $response->getStatusCode(),
-            'duration' => round($duration * 1000, 2) . 'ms',
-            'size' => strlen($response->getBody())
-        ]);
+        try {
+            // Workerman Response 对象使用 rawBody() 方法获取 body
+            $body = method_exists($response, 'rawBody') ? $response->rawBody() : (string)$response;
+            $bodySize = strlen($body);
+            
+            if (function_exists('logger')) {
+                logger('info', 'Proxy performance', [
+                    'url' => $request->path(),
+                    'method' => $request->method(),
+                    'status_code' => $response->getStatusCode(),
+                    'duration' => round($duration * 1000, 2) . 'ms',
+                    'size' => $bodySize
+                ]);
+            }
+        } catch (\Exception $e) {
+            // 日志记录失败，静默处理
+            error_log('Failed to log performance: ' . $e->getMessage());
+        }
     }
     
     /**
@@ -633,9 +700,9 @@ class ProxyHandler
             
             $domainMapping = $this->findDomainMapping($host);
             if ($domainMapping) {
-                // 找到域名映射，返回对应的后端
-                $backend = $this->findBackendByName($domainMapping['backend']);
-                if ($backend) {
+                // 找到域名映射，解析后端配置（支持 name 或直接 URL）
+                $backend = $this->resolveBackend($domainMapping['backend'] ?? '');
+                if ($backend && isset($backend['url'])) {
                     // 保存映射信息，供 buildTargetUrl 使用
                     $this->currentMapping = $domainMapping;
                     return $backend;
@@ -648,9 +715,9 @@ class ProxyHandler
         $pathMapping = $this->findPathMapping($path);
         
         if ($pathMapping) {
-            // 找到路径映射，返回对应的后端
-            $backend = $this->findBackendByName($pathMapping['backend']);
-            if ($backend) {
+            // 找到路径映射，解析后端配置（支持 name 或直接 URL）
+            $backend = $this->resolveBackend($pathMapping['backend'] ?? '');
+            if ($backend && isset($backend['url'])) {
                 // 保存映射信息，供 buildTargetUrl 使用
                 $this->currentMapping = $pathMapping;
                 return $backend;
@@ -659,6 +726,39 @@ class ProxyHandler
         
         // 3. 没有找到映射，返回默认后端
         return $this->getDefaultBackend();
+    }
+    
+    /**
+     * 解析后端配置（支持 name 或直接 URL）
+     * 
+     * @param string $backend 后端服务名称或直接 URL
+     * @return array|null 后端配置数组，如果解析失败返回 null
+     */
+    private function resolveBackend(string $backend): ?array
+    {
+        if (empty($backend)) {
+            return null;
+        }
+        
+        // 如果 backend 是 URL 格式，直接使用
+        if (filter_var($backend, FILTER_VALIDATE_URL)) {
+            return [
+                'name' => 'direct',
+                'url' => $backend,
+                'weight' => 1,
+                'health_url' => rtrim($backend, '/') . '/health',
+                'health_timeout' => 5,
+                'recovery_time' => 60,
+            ];
+        }
+        
+        // 否则，通过 name 查找后端服务
+        $foundBackend = $this->findBackendByName($backend);
+        if ($foundBackend && isset($foundBackend['url'])) {
+            return $foundBackend;
+        }
+        
+        return null;
     }
     
     /**
