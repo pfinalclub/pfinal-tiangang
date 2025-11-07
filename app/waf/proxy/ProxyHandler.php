@@ -132,7 +132,7 @@ class ProxyHandler
             'timeout' => $this->backendConfig['timeout'] ?? 30,
             'connect_timeout' => $this->backendConfig['connect_timeout'] ?? 5,
             'http_errors' => false,
-            'headers' => $this->filterHeaders($request->header()),
+            'headers' => $this->filterHeaders($request->header(), $request),
             'verify' => $this->backendConfig['verify_ssl'] ?? true,
         ];
         
@@ -307,7 +307,7 @@ class ProxyHandler
             'timeout' => $this->backendConfig['timeout'] ?? 30,
             'connect_timeout' => $this->backendConfig['connect_timeout'] ?? 5,
             'http_errors' => false, // 不抛出 HTTP 错误
-            'headers' => $this->filterHeaders($request->header()),
+            'headers' => $this->filterHeaders($request->header(), $request),
             'verify' => $this->backendConfig['verify_ssl'] ?? true,
         ];
         
@@ -330,7 +330,7 @@ class ProxyHandler
     /**
      * 过滤请求头（修复：防止请求头注入）
      */
-    private function filterHeaders(array $headers): array
+    private function filterHeaders(array $headers, ?Request $request = null): array
     {
         $filteredHeaders = [];
         $excludeHeaders = [
@@ -367,48 +367,20 @@ class ProxyHandler
         }
         
         // 添加代理相关头（使用验证过的值）
-        $clientIp = $this->getClientIp();
-        if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
-            $filteredHeaders['X-Forwarded-For'] = $clientIp;
-            $filteredHeaders['X-Real-IP'] = $clientIp;
-        }
-        
-        $protocol = $this->getProtocol();
-        if (in_array($protocol, ['http', 'https'])) {
-            $filteredHeaders['X-Forwarded-Proto'] = $protocol;
+        if ($request) {
+            $clientIp = $this->getClientIp($request);
+            if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
+                $filteredHeaders['X-Forwarded-For'] = $clientIp;
+                $filteredHeaders['X-Real-IP'] = $clientIp;
+            }
+            
+            $protocol = $this->getProtocol($request);
+            if (in_array($protocol, ['http', 'https'])) {
+                $filteredHeaders['X-Forwarded-Proto'] = $protocol;
+            }
         }
         
         return $filteredHeaders;
-    }
-    
-    /**
-     * 获取客户端 IP（安全版本）
-     */
-    private function getClientIp(): string
-    {
-        // 这里应该使用与 WafMiddleware 相同的安全方法
-        // 简化版本，实际应该注入或共享
-        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-    }
-    
-    /**
-     * 获取协议（安全版本）
-     */
-    private function getProtocol(): string
-    {
-        $protocol = $_SERVER['HTTPS'] ?? $_SERVER['REQUEST_SCHEME'] ?? 'http';
-        
-        // 标准化
-        if ($protocol === 'on' || $protocol === '1') {
-            return 'https';
-        }
-        
-        // 只允许 http 或 https
-        if (!in_array(strtolower($protocol), ['http', 'https'])) {
-            return 'http';
-        }
-        
-        return strtolower($protocol);
     }
     
     /**
@@ -572,36 +544,68 @@ class ProxyHandler
     }
     
     /**
-     * 获取客户端 IP
+     * 获取客户端 IP（修复：使用 Request 对象，支持 Workerman 环境）
      */
-    private function getClientIp(): string
+    private function getClientIp(Request $request): string
     {
-        $headers = [
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_REAL_IP',
-            'HTTP_CLIENT_IP',
-            'REMOTE_ADDR'
-        ];
+        // 1. 获取连接的真实 IP（最可靠）
+        $remoteIp = $request->connection->getRemoteIp() ?? '127.0.0.1';
         
-        foreach ($headers as $header) {
-            if (!empty($_SERVER[$header])) {
-                $ips = explode(',', $_SERVER[$header]);
-                $ip = trim($ips[0]);
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    return $ip;
-                }
+        // 2. 验证 IP 格式
+        if (!filter_var($remoteIp, FILTER_VALIDATE_IP)) {
+            return '127.0.0.1';
+        }
+        
+        // 3. 检查是否为可信代理
+        $trustedProxies = $this->config['security']['trusted_proxies'] ?? ['127.0.0.1', '::1'];
+        
+        // 如果不是可信代理，直接返回连接 IP（防止 IP 伪造）
+        if (!in_array($remoteIp, $trustedProxies)) {
+            return $remoteIp;
+        }
+        
+        // 4. 如果是可信代理，才信任代理头
+        $forwardedFor = $request->header('X-Forwarded-For');
+        if ($forwardedFor) {
+            // 取最后一个 IP（最靠近客户端的）
+            $ips = array_map('trim', explode(',', $forwardedFor));
+            $ip = end($ips);
+            
+            // 验证 IP 格式（允许私有 IP）
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
             }
         }
         
-        return '127.0.0.1';
+        // 5. 尝试其他代理头（仅当是可信代理时）
+        $realIp = $request->header('X-Real-IP');
+        if ($realIp && filter_var($realIp, FILTER_VALIDATE_IP)) {
+            return $realIp;
+        }
+        
+        // 6. 回退到连接 IP
+        return $remoteIp;
     }
     
     /**
-     * 获取协议
+     * 获取协议（修复：使用 Request 对象）
      */
-    private function getProtocol(): string
+    private function getProtocol(Request $request): string
     {
-        return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+        // 从请求头获取协议
+        $proto = $request->header('X-Forwarded-Proto');
+        if ($proto && in_array(strtolower($proto), ['http', 'https'])) {
+            return strtolower($proto);
+        }
+        
+        // 从连接获取协议
+        $scheme = $request->connection->transport ?? 'tcp';
+        if ($scheme === 'ssl' || $scheme === 'tls') {
+            return 'https';
+        }
+        
+        // 默认返回 http
+        return 'http';
     }
     
     /**

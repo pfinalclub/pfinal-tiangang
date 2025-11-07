@@ -14,7 +14,7 @@ use Predis\Client as RedisClient;
 class QuickDetector
 {
     private ConfigManager $configManager;
-    private RedisClient $redis;
+    private ?RedisClient $redis;
     private ?array $config;
     
     public function __construct()
@@ -102,21 +102,28 @@ class QuickDetector
     
     /**
      * 检查 IP 白名单
+     * 
+     * 修复 P0: 白名单逻辑错误
+     * - 如果没有配置白名单，直接放行（白名单是可选的）
+     * - 如果配置了白名单，只有 IP 在白名单中才放行
      */
     private function checkIpWhitelist(string $ip): WafResult
     {
         $whitelist = $this->getIpWhitelist();
         
+        // 如果没有配置白名单，直接放行（白名单是可选的）
         if (empty($whitelist)) {
-            return WafResult::block('no_whitelist', 'No whitelist configured');
+            return WafResult::allow();
         }
         
+        // 如果配置了白名单，检查 IP 是否在其中
         foreach ($whitelist as $whiteIp) {
             if ($this->matchIp($ip, $whiteIp)) {
                 return WafResult::allow();
             }
         }
         
+        // IP 不在白名单中，拦截
         return WafResult::block('ip_not_whitelisted', "IP {$ip} is not in whitelist");
     }
     
@@ -152,9 +159,20 @@ class QuickDetector
         $limit = $this->config['rules']['rate_limit']['max_requests'] ?? 100;
         $window = $this->config['rules']['rate_limit']['window'] ?? 60;
         
-        $current = $this->redis->incr($key);
-        if ($current === 1) {
-            $this->redis->expire($key, $window);
+        // 使用 Redis 或文件后备方案
+        if ($this->redis) {
+            try {
+                $current = $this->redis->incr($key);
+                if ($current === 1) {
+                    $this->redis->expire($key, $window);
+                }
+            } catch (\Exception $e) {
+                // Redis 操作失败，使用文件后备方案
+                $current = $this->incrementFileCounter($key, $window);
+            }
+        } else {
+            // 使用文件后备方案
+            $current = $this->incrementFileCounter($key, $window);
         }
         
         if ($current > $limit) {
@@ -279,20 +297,31 @@ class QuickDetector
     }
 
     /**
-     * 异步频率限制检查
+     * 异步频率限制检查（修复：支持离线模式）
      */
     private function checkRateLimitAsync(array $requestData): \Generator
     {
-        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步Redis操作
+        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步操作
         
         $ip = $requestData['ip'];
         $key = "rate_limit:{$ip}";
         $limit = $this->config['rules']['rate_limit']['max_requests'] ?? 100;
         $window = $this->config['rules']['rate_limit']['window'] ?? 60;
         
-        $current = $this->redis->incr($key);
-        if ($current === 1) {
-            $this->redis->expire($key, $window);
+        // 使用 Redis 或文件后备方案
+        if ($this->redis) {
+            try {
+                $current = $this->redis->incr($key);
+                if ($current === 1) {
+                    $this->redis->expire($key, $window);
+                }
+            } catch (\Exception $e) {
+                // Redis 操作失败，使用文件后备方案
+                $current = $this->incrementFileCounter($key, $window);
+            }
+        } else {
+            // 使用文件后备方案
+            $current = $this->incrementFileCounter($key, $window);
         }
         
         if ($current > $limit) {
@@ -308,16 +337,73 @@ class QuickDetector
     }
 
     /**
-     * 获取 Redis 客户端
+     * 获取 Redis 客户端（修复：支持离线模式，Redis 不可用时返回 null）
      */
-    private function getRedisClient(): RedisClient
+    private function getRedisClient(): ?RedisClient
     {
-        $config = $this->configManager->get('database.redis') ?? [];
-        return new RedisClient([
-            'host' => $config['host'] ?? '127.0.0.1',
-            'port' => $config['port'] ?? 6379,
-            'password' => $config['password'] ?? '',
-            'database' => $config['database'] ?? 0,
-        ]);
+        try {
+            $config = $this->configManager->get('database.redis') ?? [];
+            
+            // 如果没有配置 Redis，返回 null（离线模式）
+            if (empty($config) || !($config['host'] ?? false)) {
+                return null;
+            }
+            
+            $client = new RedisClient([
+                'scheme' => 'tcp',
+                'host' => $config['host'] ?? '127.0.0.1',
+                'port' => $config['port'] ?? 6379,
+                'password' => $config['password'] ?? null,
+                'database' => $config['database'] ?? 0,
+                'timeout' => 1, // 快速超时，避免阻塞
+                'read_timeout' => 1,
+            ]);
+            
+            // 测试连接（非阻塞）
+            try {
+                $client->ping();
+            } catch (\Exception $e) {
+                // 连接失败，返回 null（使用文件后备方案）
+                return null;
+            }
+            
+            return $client;
+        } catch (\Exception $e) {
+            // Redis 不可用，返回 null（离线模式）
+            return null;
+        }
+    }
+    
+    /**
+     * 文件后备方案：递增计数器（用于频率限制）
+     */
+    private function incrementFileCounter(string $key, int $ttl): int
+    {
+        $filePath = runtime_path('rate_limit/' . md5($key) . '.json');
+        $dir = dirname($filePath);
+        
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        
+        $data = ['count' => 0, 'expires' => time() + $ttl];
+        
+        if (file_exists($filePath)) {
+            $content = @file_get_contents($filePath);
+            if ($content) {
+                $data = json_decode($content, true) ?? $data;
+            }
+        }
+        
+        // 检查是否过期
+        if ($data['expires'] < time()) {
+            $data = ['count' => 0, 'expires' => time() + $ttl];
+        }
+        
+        $data['count']++;
+        
+        file_put_contents($filePath, json_encode($data), LOCK_EX);
+        
+        return $data['count'];
     }
 }

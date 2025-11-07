@@ -18,6 +18,7 @@ class MetricsCollector
     private ?array $config;
     private array $metrics = [];
     private bool $isRunning = false;
+    private int $maxMetricsSize = 1000; // 修复 P0: 限制内存中指标数量，防止内存泄漏
     
     public function __construct()
     {
@@ -25,8 +26,12 @@ class MetricsCollector
         $this->config = $this->configManager->get('monitoring') ?? [
             'enabled' => true,
             'metrics_interval' => 60,
-            'retention_days' => 7
+            'retention_days' => 7,
+            'max_metrics_size' => 1000, // 修复 P0: 限制内存中指标数量
         ];
+        
+        // 从配置读取最大指标数量
+        $this->maxMetricsSize = $this->config['max_metrics_size'] ?? 1000;
         
         try {
             $this->redis = $this->getRedisClient();
@@ -420,6 +425,8 @@ class MetricsCollector
     
     /**
      * 收集指标
+     * 
+     * 修复 P0: 添加内存清理机制，防止内存泄漏
      */
     private function collectMetrics(): \Generator
     {
@@ -427,8 +434,38 @@ class MetricsCollector
             // 收集系统指标
             $this->recordSystemMetrics();
             
+            // 清理过期的内存指标（防止内存泄漏）
+            $this->cleanupMetrics();
+            
             // 等待下次收集
             yield sleep($this->config['collection_interval'] ?? 60);
+        }
+    }
+    
+    /**
+     * 清理过期的内存指标（修复 P0: 防止内存泄漏）
+     */
+    private function cleanupMetrics(): void
+    {
+        // 如果内存中的指标数量超过限制，清理最旧的
+        if (count($this->metrics) > $this->maxMetricsSize) {
+            // 保留最新的指标，删除最旧的
+            $this->metrics = array_slice(
+                $this->metrics,
+                -$this->maxMetricsSize,
+                $this->maxMetricsSize,
+                true // 保留键
+            );
+        }
+        
+        // 清理过期的指标（超过保留时间的）
+        $retentionTime = ($this->config['retention_days'] ?? 7) * 86400;
+        $currentTime = time();
+        
+        foreach ($this->metrics as $key => $metric) {
+            if (isset($metric['timestamp']) && ($currentTime - $metric['timestamp']) > $retentionTime) {
+                unset($this->metrics[$key]);
+            }
         }
     }
     

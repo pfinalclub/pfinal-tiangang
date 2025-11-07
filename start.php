@@ -4,6 +4,7 @@ use Workerman\Worker;
 use Workerman\Protocols\Http\Request;
 use Workerman\Protocols\Http\Response;
 use app\waf\TiangangGateway;
+use app\admin\config\Database;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -12,6 +13,9 @@ if (file_exists(__DIR__ . '/.env')) {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
     $dotenv->load();
 }
+
+// 初始化数据库连接（使用 Illuminate Database ORM）
+Database::initialize();
 
 // 创建 HTTP 服务器
 $worker = new Worker('http://' . env('SERVER_HOST', '0.0.0.0') . ':' . env('SERVER_PORT', 8787));

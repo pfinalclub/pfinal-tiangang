@@ -308,29 +308,29 @@ class TiangangGateway
     
     /**
      * 异步记录日志（后台任务）
+     * 
+     * 修复 P0: 异步日志在 Workerman 中无效
+     * - 移除 fastcgi_finish_request()（Workerman 不是 FastCGI）
+     * - Workerman 本身就是异步的，直接执行异步任务即可
      */
     private function queueAsyncLog(Request $request, \app\waf\core\WafResult $wafResult, float $duration): void
     {
-        // 使用 fastcgi_finish_request 在响应发送后执行
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        }
-        
-        // 在后台异步记录日志
+        // Workerman 本身就是异步事件驱动的，直接执行异步任务
+        // 不需要 fastcgi_finish_request()（那是 FastCGI 专用的）
         \PfinalClub\Asyncio\run($this->asyncLog($request, $wafResult, $duration));
     }
     
     /**
      * 异步记录错误日志（后台任务）
+     * 
+     * 修复 P0: 异步日志在 Workerman 中无效
+     * - 移除 fastcgi_finish_request()（Workerman 不是 FastCGI）
+     * - Workerman 本身就是异步的，直接执行异步任务即可
      */
     private function queueAsyncErrorLog(Request $request, \Exception $e): void
     {
-        // 使用 fastcgi_finish_request 在响应发送后执行
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        }
-        
-        // 在后台异步记录错误日志
+        // Workerman 本身就是异步事件驱动的，直接执行异步任务
+        // 不需要 fastcgi_finish_request()（那是 FastCGI 专用的）
         \PfinalClub\Asyncio\run($this->asyncErrorLog($request, $e));
     }
     

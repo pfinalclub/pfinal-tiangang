@@ -5,6 +5,8 @@ namespace app\admin\controller;
 use Workerman\Protocols\Http\Request;
 use Workerman\Protocols\Http\Response;
 use app\admin\middleware\CsrfMiddleware;
+use app\admin\helpers\DatabaseHelper;
+use app\admin\helpers\OfflineModeHelper;
 use Predis\Client as RedisClient;
 
 /**
@@ -48,7 +50,7 @@ class AuthController
         }
     }
     /**
-     * 显示登录页面
+     * 显示登录页面（修复：确保临时会话ID保存到Cookie，以便CSRF验证）
      */
     public function login(Request $request): Response
     {
@@ -57,12 +59,37 @@ class AuthController
             return new Response(302, ['Location' => '/admin/dashboard'], '');
         }
 
-        // 生成 CSRF Token（如果还没有会话，使用临时会话ID）
-        $sessionId = $request->cookie('waf_session') ?? bin2hex(random_bytes(32));
+        // 获取或生成临时会话ID（用于CSRF Token）
+        $sessionId = $request->cookie('waf_session');
+        if (!$sessionId) {
+            // 生成临时会话ID（基于IP、UA和时间戳，增加熵值）
+            $ip = $this->getClientIp($request);
+            $ua = $request->header('User-Agent', '');
+            $timestamp = time();
+            $random = bin2hex(random_bytes(16));
+            $sessionId = hash('sha256', $ip . $ua . $timestamp . $random . 'csrf_temp');
+            
+            // 将临时会话ID保存到Cookie（修复：确保客户端有sessionId用于CSRF验证）
+            $tempCookie = sprintf(
+                'waf_session=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600',
+                urlencode($sessionId)
+            );
+        } else {
+            $tempCookie = null;
+        }
+        
+        // 生成 CSRF Token
         $csrfToken = $this->csrfMiddleware->generateToken($sessionId);
         
         $html = $this->generateLoginPage($csrfToken);
-        return new Response(200, ['Content-Type' => 'text/html'], $html);
+        
+        // 如果有临时Cookie，添加到响应头
+        $headers = ['Content-Type' => 'text/html'];
+        if ($tempCookie) {
+            $headers['Set-Cookie'] = $tempCookie;
+        }
+        
+        return new Response(200, $headers, $html);
     }
 
     /**
@@ -100,8 +127,17 @@ class AuthController
 
         // 4. 验证用户名和密码
         if ($this->validateCredentials($username, $password)) {
-            // 成功：清除失败记录
+            // 成功：清除失败记录（包括IP级别的）
             $this->clearFailedAttempts($clientIp, $username);
+            $this->clearIpFailedAttempts($clientIp);
+            
+            // 从数据库获取用户信息（用于更新登录信息）
+            $user = DatabaseHelper::getUserByUsername($username);
+            if ($user) {
+                // 更新用户登录信息（使用 ORM）
+                $user->updateLoginInfo($clientIp, $request->header('User-Agent', ''));
+            }
+            
             // 创建会话
             $sessionId = $this->createSession($request, $username, $remember);
             
@@ -130,10 +166,27 @@ class AuthController
                 'data' => ['redirect' => '/admin/dashboard']
             ]));
         } else {
-            // 失败：增加失败计数
+            // 失败：增加失败计数（包括IP级别的全局计数）
             $failCount = $this->incrementFailedAttempts($clientIp, $username);
+            $ipFailCount = $this->incrementIpFailedAttempts($clientIp);
             
-            // 超过阈值则封禁 IP
+            // 从数据库获取用户信息（用于更新失败登录次数）
+            $user = DatabaseHelper::getUserByUsername($username);
+            if ($user) {
+                // 增加失败登录次数（使用 ORM）
+                $user->incrementFailedLoginCount();
+            }
+            
+            // IP级别的全局失败计数（防止通过更换用户名绕过）
+            if ($ipFailCount >= 10) {
+                $this->blockIp($clientIp, 3600); // 封禁1小时
+                return new Response(429, ['Content-Type' => 'application/json'], json_encode([
+                    'code' => 429,
+                    'msg' => '登录失败次数过多，IP已被临时封禁'
+                ]));
+            }
+            
+            // 单个用户名的失败计数
             if ($failCount >= 5) {
                 $this->blockIp($clientIp, 3600); // 封禁1小时
                 return new Response(429, ['Content-Type' => 'application/json'], json_encode([
@@ -142,8 +195,8 @@ class AuthController
                 ]));
             }
             
-            // 计算剩余尝试次数
-            $remainingAttempts = 5 - $failCount;
+            // 计算剩余尝试次数（取较小值）
+            $remainingAttempts = min(5 - $failCount, 10 - $ipFailCount);
             
             return new Response(200, ['Content-Type' => 'application/json'], json_encode([
                 'code' => 1,
@@ -170,19 +223,24 @@ class AuthController
     
     /**
      * 获取临时会话 ID（用于未登录用户生成 CSRF Token）
+     * 修复：增加熵值，防止同一网络下用户共享临时会话ID
      */
     private function getTempSessionId(Request $request): string
     {
-        // 尝试从 Cookie 获取（可能还未设置）
+        // 尝试从 Cookie 获取（应该已经由 login() 方法设置）
         $sessionId = $request->cookie('waf_session');
         if ($sessionId) {
             return $sessionId;
         }
         
-        // 如果没有，基于 IP 和 User-Agent 生成临时 ID（仅用于 CSRF Token）
+        // 如果没有（不应该发生，但作为后备方案），基于 IP、UA、时间戳和随机数生成
+        // 注意：这种情况下生成的ID可能与 login() 中生成的不一致，可能导致CSRF验证失败
+        // 但这是后备方案，正常情况下应该不会执行到这里
         $ip = $this->getClientIp($request);
         $ua = $request->header('User-Agent', '');
-        return hash('sha256', $ip . $ua . 'csrf_temp');
+        $timestamp = time();
+        $random = bin2hex(random_bytes(16));
+        return hash('sha256', $ip . $ua . $timestamp . $random . 'csrf_temp');
     }
 
     /**
@@ -217,7 +275,7 @@ class AuthController
     }
 
     /**
-     * 验证用户凭据
+     * 验证用户凭据（修复：从数据库读取用户信息）
      */
     private function validateCredentials(string $username, string $password): bool
     {
@@ -236,21 +294,27 @@ class AuthController
             return false;
         }
         
-        // 默认管理员账户（使用预生成的哈希值）
-        // 注意：生产环境应该从数据库验证，不要将密码哈希提交到版本控制
-        $validUsers = [
-            'admin' => '$2y$12$YLJMW2EePx8Oa7uMkbfvne1lzmpAxlo5lruaERM.qPLv78L/Dpuu2', // admin123
-            'waf' => '$2y$12$QSzjcbBTJZhDqNplSbDXQ.ve.Lqv0dQVztsu3INh8wnNV.C6md216', // waf2024
-            'tiangang' => '$2y$12$41ejLNKxqpeXerzfm.3H.el.RVxCHXMGqDUhQQNeUBHAEXdznZUs.', // tiangang2024
-        ];
-
-        if (!isset($validUsers[$username])) {
-            // 即使用户不存在，也执行一次哈希验证以保持时间一致（防止时间攻击）
-            password_verify($password, '$2y$10$dummy_hash_for_timing_attack_prevention');
-            return false;
+        // 尝试从数据库读取用户信息（使用 ORM）
+        $user = DatabaseHelper::getUserByUsername($username);
+        
+        if ($user) {
+            // 检查用户是否被锁定
+            if ($user->isLocked()) {
+                return false;
+            }
+            
+            // 验证密码（使用 Model 方法）
+            if ($user->verifyPassword($password)) {
+                return true;
+            }
+        } else {
+            // 数据库不可用时的后备方案：使用离线模式的硬编码账户
+            // 注意：生产环境应该配置数据库，不要依赖硬编码账户
+            $offlineUser = OfflineModeHelper::validateOfflineUser($username, $password);
+            return $offlineUser !== null;
         }
-
-        return password_verify($password, $validUsers[$username]);
+        
+        return false;
     }
 
     /**
@@ -646,6 +710,66 @@ class AuthController
         
         // 文件存储
         $failFile = runtime_path("failed_logins/{$ip}_{$username}.txt");
+        if (file_exists($failFile)) {
+            @unlink($failFile);
+        }
+    }
+    
+    /**
+     * 增加IP级别的全局失败计数（修复：防止通过更换用户名绕过封禁）
+     */
+    private function incrementIpFailedAttempts(string $ip): int
+    {
+        $key = "failed_attempts_ip:{$ip}";
+        
+        if ($this->redis) {
+            try {
+                $count = $this->redis->incr($key);
+                $this->redis->expire($key, 3600); // 1小时过期
+                return $count;
+            } catch (\Exception $e) {
+                // Redis 失败时使用文件存储
+            }
+        }
+        
+        // 文件存储
+        $failFile = runtime_path("failed_logins/ip_{$ip}.txt");
+        $failDir = dirname($failFile);
+        if (!is_dir($failDir)) {
+            mkdir($failDir, 0700, true);
+        }
+        
+        $count = 1;
+        if (file_exists($failFile)) {
+            $count = (int)file_get_contents($failFile) + 1;
+        }
+        
+        file_put_contents($failFile, (string)$count, LOCK_EX);
+        
+        // 设置过期时间（1小时后删除）
+        touch($failFile, time() + 3600);
+        
+        return $count;
+    }
+    
+    /**
+     * 清除IP级别的全局失败计数
+     */
+    private function clearIpFailedAttempts(string $ip): void
+    {
+        $key = "failed_attempts_ip:{$ip}";
+        
+        if ($this->redis) {
+            try {
+                $this->redis->del($key);
+                return;
+            } catch (\Exception $e) {
+                // Redis 失败时使用文件存储
+            }
+        }
+        
+        // 文件存储
+        $failFile = runtime_path("failed_logins/ip_{$ip}.txt");
         if (file_exists($failFile)) {
             @unlink($failFile);
         }

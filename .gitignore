@@ -36,3 +36,5 @@ Thumbs.db
 .ruler/
 # Cursor
 .cursorrules
+runtime/*
+docs/*

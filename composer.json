@@ -11,7 +11,9 @@
         "monolog/monolog": "^3.0",
         "vlucas/phpdotenv": "^5.0",
         "guzzlehttp/guzzle": "^7.0",
-        "webman/admin": "^1.0"
+        "webman/admin": "^1.0",
+        "illuminate/database": "^12.0",
+        "illuminate/pagination": "^12.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"
