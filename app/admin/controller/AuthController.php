@@ -296,13 +296,13 @@ class AuthController
         
         // 尝试从数据库读取用户信息（使用 ORM）
         $user = DatabaseHelper::getUserByUsername($username);
-        
+
         if ($user) {
             // 检查用户是否被锁定
             if ($user->isLocked()) {
-                return false;
-            }
-            
+            return false;
+        }
+
             // 验证密码（使用 Model 方法）
             if ($user->verifyPassword($password)) {
                 return true;

@@ -17,7 +17,12 @@ class ConfigManager
     
     public function __construct(?string $configPath = null)
     {
-        $this->configPath = $configPath ?: __DIR__ . '/../../config';
+        if ($configPath) {
+            $this->configPath = $configPath;
+        } else {
+            // 从 app/waf/config 向上三级到项目根目录，然后进入 config 目录
+            $this->configPath = realpath(__DIR__ . '/../../../config') ?: __DIR__ . '/../../../config';
+        }
         $this->loadConfig();
     }
     

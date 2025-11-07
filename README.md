@@ -357,6 +357,20 @@ php start.php start
 - 编写完整的单元测试
 - 添加详细的文档注释
 
+## 📚 文档
+
+### 核心文档
+
+- [核心功能梳理](docs/CORE_FEATURES.md) - 详细的功能模块说明和工作流程
+- [架构设计文档](docs/ARCHITECTURE.md) - 系统架构、模块划分、设计模式
+- [功能清单](docs/FEATURES_CHECKLIST.md) - 完整的功能检查清单
+
+### 其他文档
+
+- [代码审查报告](docs/CODE_REVIEW_REPORT.md) - 资深程序员代码审查结果
+- [离线模式文档](docs/OFFLINE_MODE.md) - 离线模式使用指南
+- [P0 修复总结](docs/P0_FIXES_SUMMARY.md) - 高优先级问题修复记录
+
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。

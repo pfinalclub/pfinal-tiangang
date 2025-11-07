@@ -121,6 +121,21 @@ class CsrfMiddleware
             return $headerToken;
         }
         
+        // 检查 Content-Type，如果是 JSON，从 JSON 中提取
+        $contentType = $request->header('Content-Type', '');
+        if (strpos($contentType, 'application/json') !== false) {
+            $rawBody = $request->rawBody();
+            if (!empty($rawBody)) {
+                $jsonData = @json_decode($rawBody, true);
+                if ($jsonData && isset($jsonData['_token'])) {
+                    return $jsonData['_token'];
+                }
+                if ($jsonData && isset($jsonData['csrf_token'])) {
+                    return $jsonData['csrf_token'];
+                }
+            }
+        }
+        
         // 从 POST 数据获取（表单提交）
         parse_str($request->rawBody(), $postData);
         return $postData['_token'] ?? $postData['csrf_token'] ?? null;

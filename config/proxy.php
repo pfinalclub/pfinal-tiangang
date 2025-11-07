@@ -2,142 +2,182 @@
 
 return [
     // 代理基础配置
-    'enabled' => env('PROXY_ENABLED', true),
-    'timeout' => env('PROXY_TIMEOUT', 30),
-    'connect_timeout' => env('PROXY_CONNECT_TIMEOUT', 5),
-    'verify_ssl' => env('PROXY_VERIFY_SSL', true),
-    'stream_threshold' => env('PROXY_STREAM_THRESHOLD', 1048576), // 1MB
+    'enabled' => true,
+    'timeout' => 30,
+    'connect_timeout' => 5,
+    'verify_ssl' => true,
+    'stream_threshold' => 1048576,
     
     // 后端服务配置
     'backends' => [
         [
             'name' => 'primary',
-            'url' => env('BACKEND_URL', 'http://localhost:8080'),
-            'weight' => env('BACKEND_WEIGHT', 1),
-            'health_url' => env('BACKEND_HEALTH_URL', 'http://localhost:8080/health'),
-            'health_timeout' => env('BACKEND_HEALTH_TIMEOUT', 5),
-            'recovery_time' => env('BACKEND_RECOVERY_TIME', 60),
-            'health_check' => [
-                'expected_status' => 'ok',
-                'expected_content' => 'healthy'
-            ]
+            'url' => 'http://localhost:8080',
+            'weight' => 1,
+            'health_url' => 'http://localhost:8080/health',
+            'health_timeout' => 5,
+            'recovery_time' => 60,
+            'health_check' => array (
+  'expected_status' => 'ok',
+  'expected_content' => 'healthy',
+),
         ],
         [
             'name' => 'secondary',
-            'url' => env('BACKEND_URL_2', 'http://localhost:8081'),
-            'weight' => env('BACKEND_WEIGHT_2', 1),
-            'health_url' => env('BACKEND_HEALTH_URL_2', 'http://localhost:8081/health'),
-            'health_timeout' => env('BACKEND_HEALTH_TIMEOUT_2', 5),
-            'recovery_time' => env('BACKEND_RECOVERY_TIME_2', 60),
-            'health_check' => [
-                'expected_status' => 'ok',
-                'expected_content' => 'healthy'
-            ]
-        ]
+            'url' => 'http://localhost:8081',
+            'weight' => 1,
+            'health_url' => 'http://localhost:8081/health',
+            'health_timeout' => 5,
+            'recovery_time' => 60,
+            'health_check' => array (
+  'expected_status' => 'ok',
+  'expected_content' => 'healthy',
+),
+        ],
     ],
+    
+    // 域名映射配置（域名 -> 后端服务名称）- 主要路由方式
+    // 示例：'crm.smm.cn' -> 'crm-backend', 'erp.smm.cn' -> 'erp-backend'
+    // 支持精确匹配和通配符匹配（如 '*.api.smm.cn'）
+    // 优先级：域名映射 > 路径映射 > 默认后端
+    'domain_mappings' => [
+        [
+            'domain' => 'dev.local.crm.cn',
+            'backend' => 'primary',
+            'waf_rules' => array (
+  0 => 'sql_injection',
+  1 => 'xss',
+  2 => 'rate_limit',
+  3 => 'ip_blacklist',
+),
+            'enabled' => true,
+        ],
+    ],
+    
+    // 路径映射配置（路径前缀 -> 后端服务名称）- 补充路由方式
+    // 示例：'/app1' -> 'primary', '/app2' -> 'secondary'
+    // 如果请求路径匹配映射，则转发到对应的后端服务
+    // 优先级：域名映射 > 路径映射 > 默认后端
+    'path_mappings' => [
+    ],
+    
+    // 默认后端（当没有域名或路径匹配时使用）
+    'default_backend' => 'primary',
     
     // 负载均衡配置
-    'load_balancer' => [
-        'strategy' => env('LOAD_BALANCER_STRATEGY', 'round_robin'), // round_robin, least_connections, weighted, ip_hash
-        'health_check_interval' => env('HEALTH_CHECK_INTERVAL', 30), // 秒
-        'failure_threshold' => env('FAILURE_THRESHOLD', 3),
-        'success_threshold' => env('SUCCESS_THRESHOLD', 2)
-    ],
-    
-    // 缓存配置
-    'cache' => [
-        'enabled' => env('PROXY_CACHE_ENABLED', false),
-        'ttl' => env('PROXY_CACHE_TTL', 300), // 秒
-        'max_size' => env('PROXY_CACHE_MAX_SIZE', 100 * 1024 * 1024), // 100MB
-        'exclude_headers' => [
-            'Set-Cookie',
-            'Authorization',
-            'X-Request-ID'
-        ]
-    ],
-    
-    // 重试配置
-    'retry' => [
-        'enabled' => env('PROXY_RETRY_ENABLED', true),
-        'max_attempts' => env('PROXY_RETRY_MAX_ATTEMPTS', 3),
-        'delay' => env('PROXY_RETRY_DELAY', 100), // 毫秒
-        'backoff_multiplier' => env('PROXY_RETRY_BACKOFF_MULTIPLIER', 2),
-        'retry_on' => [
-            502, // Bad Gateway
-            503, // Service Unavailable
-            504, // Gateway Timeout
-            520, // Unknown Error
-            521, // Web Server Is Down
-            522, // Connection Timed Out
-            523, // Origin Is Unreachable
-            524  // A Timeout Occurred
-        ]
-    ],
-    
-    // 限流配置
-    'rate_limit' => [
-        'enabled' => env('PROXY_RATE_LIMIT_ENABLED', true),
-        'requests_per_minute' => env('PROXY_RATE_LIMIT_RPM', 1000),
-        'burst_size' => env('PROXY_RATE_LIMIT_BURST', 100),
-        'key_by' => 'ip', // ip, user, path
-        'exclude_paths' => [
-            '/health',
-            '/status',
-            '/metrics'
-        ]
-    ],
-    
-    // 监控配置
-    'monitoring' => [
-        'enabled' => env('PROXY_MONITORING_ENABLED', true),
-        'metrics' => [
-            'response_time' => true,
-            'throughput' => true,
-            'error_rate' => true,
-            'backend_health' => true
-        ],
-        'alerts' => [
-            'high_response_time' => env('ALERT_HIGH_RESPONSE_TIME', 5000), // 毫秒
-            'high_error_rate' => env('ALERT_HIGH_ERROR_RATE', 0.1), // 10%
-            'backend_down' => true
-        ]
-    ],
+    'load_balancer' => array (
+  'strategy' => 'round_robin',
+  'health_check_interval' => 30,
+  'failure_threshold' => 3,
+  'success_threshold' => 2,
+),
     
     // 安全配置
-    'security' => [
-        'strip_headers' => [
-            'X-Forwarded-For',
-            'X-Real-IP',
-            'X-Forwarded-Proto',
-            'X-Forwarded-Host'
-        ],
-        'add_headers' => [
-            'X-Proxy-By' => 'Tiangang-WAF',
-            'X-Proxy-Version' => '1.0.0'
-        ],
-        'blocked_headers' => [
-            'X-Forwarded-For',
-            'X-Real-IP'
-        ],
-        // SSRF 防护配置
-        'allowed_backend_hosts' => !empty(env('ALLOWED_BACKEND_HOSTS', ''))
-            ? array_map('trim', explode(',', env('ALLOWED_BACKEND_HOSTS', '')))
-            : [],
-        'allowed_schemes' => ['http', 'https'], // 只允许 http 和 https
-        'block_private_ips' => env('BLOCK_PRIVATE_IPS', true), // 阻止访问私有 IP
-    ],
+    'security' => array (
+  'strip_headers' => 
+  array (
+    0 => 'X-Forwarded-For',
+    1 => 'X-Real-IP',
+    2 => 'X-Forwarded-Proto',
+    3 => 'X-Forwarded-Host',
+  ),
+  'add_headers' => 
+  array (
+    'X-Proxy-By' => 'Tiangang-WAF',
+    'X-Proxy-Version' => '1.0.0',
+  ),
+  'blocked_headers' => 
+  array (
+    0 => 'X-Forwarded-For',
+    1 => 'X-Real-IP',
+  ),
+  'allowed_backend_hosts' => 
+  array (
+  ),
+  'allowed_schemes' => 
+  array (
+    0 => 'http',
+    1 => 'https',
+  ),
+  'block_private_ips' => true,
+),
     
     // 日志配置
-    'logging' => [
-        'enabled' => env('PROXY_LOGGING_ENABLED', true),
-        'level' => env('PROXY_LOG_LEVEL', 'info'),
-        'log_requests' => env('PROXY_LOG_REQUESTS', true),
-        'log_responses' => env('PROXY_LOG_RESPONSES', false),
-        'log_errors' => env('PROXY_LOG_ERRORS', true),
-        'sensitive_headers' => [
-            'Authorization',
-            'Cookie',
-            'X-API-Key'
-        ]
-    ]
+    'logging' => array (
+  'enabled' => true,
+  'level' => 'info',
+  'log_requests' => true,
+  'log_responses' => false,
+  'log_errors' => true,
+  'sensitive_headers' => 
+  array (
+    0 => 'Authorization',
+    1 => 'Cookie',
+    2 => 'X-API-Key',
+  ),
+),
+    
+    // 监控配置
+    'monitoring' => array (
+  'enabled' => true,
+  'metrics' => 
+  array (
+    'response_time' => true,
+    'throughput' => true,
+    'error_rate' => true,
+    'backend_health' => true,
+  ),
+  'alerts' => 
+  array (
+    'high_response_time' => 5000,
+    'high_error_rate' => 0.1,
+    'backend_down' => true,
+  ),
+),
+    
+    // 缓存配置
+    'cache' => array (
+  'enabled' => false,
+  'ttl' => 300,
+  'max_size' => 104857600,
+  'exclude_headers' => 
+  array (
+    0 => 'Set-Cookie',
+    1 => 'Authorization',
+    2 => 'X-Request-ID',
+  ),
+),
+    
+    // 重试配置
+    'retry' => array (
+  'enabled' => true,
+  'max_attempts' => 3,
+  'delay' => 100,
+  'backoff_multiplier' => 2,
+  'retry_on' => 
+  array (
+    0 => 502,
+    1 => 503,
+    2 => 504,
+    3 => 520,
+    4 => 521,
+    5 => 522,
+    6 => 523,
+    7 => 524,
+  ),
+),
+    
+    // 限流配置
+    'rate_limit' => array (
+  'enabled' => true,
+  'requests_per_minute' => 1000,
+  'burst_size' => 100,
+  'key_by' => 'ip',
+  'exclude_paths' => 
+  array (
+    0 => '/health',
+    1 => '/status',
+    2 => '/metrics',
+  ),
+),
 ];

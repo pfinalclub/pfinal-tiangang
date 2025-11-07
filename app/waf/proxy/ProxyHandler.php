@@ -37,8 +37,11 @@ class ProxyHandler
     {
         $startTime = microtime(true);
         
+        // 重置当前映射
+        $this->currentMapping = null;
+        
         try {
-            // 构建目标 URL
+            // 构建目标 URL（会根据路径映射选择后端）
             $targetUrl = $this->buildTargetUrl($request);
             
             // 构建请求选项
@@ -99,25 +102,15 @@ class ProxyHandler
     }
     
     /**
-     * 异步构建目标 URL
+     * 异步构建目标 URL（支持路径映射）
      */
     private function asyncBuildTargetUrl(Request $request): \Generator
     {
         // 模拟异步 URL 构建
         yield sleep(0.001);
         
-        $backend = $this->getBackendConfig();
-        $baseUrl = $backend['url'];
-        $path = $request->path();
-        $query = $request->queryString();
-        
-        $targetUrl = rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
-        
-        if ($query) {
-            $targetUrl .= '?' . $query;
-        }
-        
-        return $targetUrl;
+        // 使用同步方法构建 URL（已支持路径映射）
+        return $this->buildTargetUrl($request);
     }
     
     /**
@@ -202,11 +195,11 @@ class ProxyHandler
     }
     
     /**
-     * 构建目标 URL（修复：添加 SSRF 防护）
+     * 构建目标 URL（修复：添加 SSRF 防护，支持路径映射）
      */
     private function buildTargetUrl(Request $request): string
     {
-        $backend = $this->getBackendConfig();
+        $backend = $this->getBackendConfig($request);
         $baseUrl = $backend['url'];
         
         // 1. 验证基础 URL
@@ -244,8 +237,21 @@ class ProxyHandler
             }
         }
         
-        // 5. 构建目标路径（清理路径，防止路径遍历）
-        $path = $this->sanitizePath($request->path());
+        // 5. 构建目标路径（清理路径，防止路径遍历，支持路径映射）
+        $requestPath = $request->path();
+        $path = $this->sanitizePath($requestPath);
+        
+        // 如果存在路径映射且启用了 strip_prefix，移除路径前缀
+        if ($this->currentMapping && ($this->currentMapping['strip_prefix'] ?? false)) {
+            $mappingPath = rtrim($this->currentMapping['path'] ?? '', '/');
+            if ($mappingPath && str_starts_with($path, $mappingPath)) {
+                $path = substr($path, strlen($mappingPath));
+                if (empty($path) || $path[0] !== '/') {
+                    $path = '/' . $path;
+                }
+            }
+        }
+        
         $query = $request->queryString();
         
         // 6. 验证并清理查询字符串
@@ -609,11 +615,170 @@ class ProxyHandler
     }
     
     /**
-     * 获取后端配置
+     * 获取后端配置（支持域名映射和路径映射）
+     * 优先级：域名映射 > 路径映射 > 默认后端
      */
-    private function getBackendConfig(): array
+    private function getBackendConfig(?Request $request = null): array
     {
-        return $this->backendConfig['backends'][0] ?? [
+        // 如果没有请求，返回默认后端
+        if (!$request) {
+            return $this->getDefaultBackend();
+        }
+        
+        // 1. 优先检查域名映射（主要路由方式）
+        $host = $request->header('Host');
+        if ($host) {
+            // 移除端口号（如果有）
+            $host = preg_replace('/:\d+$/', '', $host);
+            
+            $domainMapping = $this->findDomainMapping($host);
+            if ($domainMapping) {
+                // 找到域名映射，返回对应的后端
+                $backend = $this->findBackendByName($domainMapping['backend']);
+                if ($backend) {
+                    // 保存映射信息，供 buildTargetUrl 使用
+                    $this->currentMapping = $domainMapping;
+                    return $backend;
+                }
+            }
+        }
+        
+        // 2. 检查路径映射（补充路由方式）
+        $path = $request->path();
+        $pathMapping = $this->findPathMapping($path);
+        
+        if ($pathMapping) {
+            // 找到路径映射，返回对应的后端
+            $backend = $this->findBackendByName($pathMapping['backend']);
+            if ($backend) {
+                // 保存映射信息，供 buildTargetUrl 使用
+                $this->currentMapping = $pathMapping;
+                return $backend;
+            }
+        }
+        
+        // 3. 没有找到映射，返回默认后端
+        return $this->getDefaultBackend();
+    }
+    
+    /**
+     * 当前请求的路径映射（临时存储）
+     */
+    private ?array $currentMapping = null;
+    
+    /**
+     * 查找域名映射（支持精确匹配和通配符匹配）
+     */
+    private function findDomainMapping(string $host): ?array
+    {
+        $mappings = $this->backendConfig['domain_mappings'] ?? [];
+        
+        // 先匹配精确域名，再匹配通配符
+        // 1. 精确匹配
+        foreach ($mappings as $mapping) {
+            if (!($mapping['enabled'] ?? true)) {
+                continue; // 跳过禁用的映射
+            }
+            
+            $domain = $mapping['domain'] ?? '';
+            if (empty($domain)) {
+                continue;
+            }
+            
+            // 精确匹配
+            if ($domain === $host) {
+                return $mapping;
+            }
+        }
+        
+        // 2. 通配符匹配（如 *.api.smm.cn）
+        foreach ($mappings as $mapping) {
+            if (!($mapping['enabled'] ?? true)) {
+                continue;
+            }
+            
+            $domain = $mapping['domain'] ?? '';
+            if (empty($domain) || strpos($domain, '*') === false) {
+                continue; // 跳过非通配符域名
+            }
+            
+            // 将通配符转换为正则表达式
+            $pattern = str_replace(['.', '*'], ['\.', '.*'], $domain);
+            $pattern = '/^' . $pattern . '$/';
+            
+            if (preg_match($pattern, $host)) {
+                return $mapping;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 查找路径映射
+     */
+    private function findPathMapping(string $path): ?array
+    {
+        $mappings = $this->backendConfig['path_mappings'] ?? [];
+        
+        // 按路径长度降序排序，优先匹配更长的路径
+        usort($mappings, function($a, $b) {
+            return strlen($b['path'] ?? '') <=> strlen($a['path'] ?? '');
+        });
+        
+        foreach ($mappings as $mapping) {
+            if (!($mapping['enabled'] ?? true)) {
+                continue; // 跳过禁用的映射
+            }
+            
+            $mappingPath = $mapping['path'] ?? '';
+            if (empty($mappingPath)) {
+                continue;
+            }
+            
+            // 精确匹配或前缀匹配
+            if ($path === $mappingPath || str_starts_with($path, rtrim($mappingPath, '/') . '/')) {
+                return $mapping;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 根据名称查找后端
+     */
+    private function findBackendByName(string $name): ?array
+    {
+        $backends = $this->backendConfig['backends'] ?? [];
+        foreach ($backends as $backend) {
+            if (($backend['name'] ?? '') === $name) {
+                return $backend;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * 获取默认后端
+     */
+    private function getDefaultBackend(): array
+    {
+        $defaultName = $this->backendConfig['default_backend'] ?? 'primary';
+        $backend = $this->findBackendByName($defaultName);
+        
+        if ($backend) {
+            return $backend;
+        }
+        
+        // 如果找不到，返回第一个后端
+        $backends = $this->backendConfig['backends'] ?? [];
+        if (!empty($backends)) {
+            return $backends[0];
+        }
+        
+        // 最后的默认值
+        return [
             'url' => 'http://localhost:8080',
             'timeout' => 30,
             'connect_timeout' => 5,
@@ -624,15 +789,12 @@ class ProxyHandler
     
     /**
      * 异步记录性能指标（后台任务）
+     * 
+     * 修复：Workerman 不是 FastCGI，不需要 fastcgi_finish_request
      */
     private function queueAsyncLogPerformance(Request $request, Response $response, float $duration): void
     {
-        // 使用 fastcgi_finish_request 在响应发送后执行
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        }
-        
-        // 在后台异步记录性能指标
+        // Workerman 本身就是异步事件驱动的，直接执行异步任务即可
         \PfinalClub\Asyncio\run($this->asyncLogPerformance($request, $response, $duration));
     }
 
