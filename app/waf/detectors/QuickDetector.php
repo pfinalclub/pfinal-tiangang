@@ -49,34 +49,59 @@ class QuickDetector
 
     /**
      * 快速检测（同步版本，保留兼容性）
+     * 
+     * @param array $requestData 请求数据
+     * @param array $enabledRules 启用的规则列表（可选，如果不提供则使用全局配置）
      */
-    public function check(array $requestData): WafResult
+    public function check(array $requestData, ?array $enabledRules = null): WafResult
     {
-        // IP 黑名单检查
+        // IP 黑名单检查（总是启用）
         $ipResult = $this->checkIpBlacklist($requestData['ip']);
         if ($ipResult->isBlocked()) {
             return $ipResult;
         }
         
-        // IP 白名单检查
-        $ipResult = $this->checkIpWhitelist($requestData['ip']);
-        if (!$ipResult->isBlocked()) {
-            return WafResult::allow(); // 白名单直接放行
+        // IP 白名单检查（总是启用）
+        $whitelist = $this->getIpWhitelist();
+        if (!empty($whitelist)) {
+            $ipResult = $this->checkIpWhitelist($requestData['ip']);
+            if (!$ipResult->isBlocked()) {
+                // IP 在白名单中，直接放行
+                return WafResult::allow();
+            }
+            // IP 不在白名单中，继续检测（会被后续规则拦截）
         }
         
-        // 基础正则检查
-        $regexResult = $this->checkBasicRegex($requestData);
+        // 基础正则检查（根据启用的规则）
+        $regexResult = $this->checkBasicRegex($requestData, $enabledRules);
         if ($regexResult->isBlocked()) {
             return $regexResult;
         }
         
-        // 频率限制检查
-        $rateResult = $this->checkRateLimit($requestData);
-        if ($rateResult->isBlocked()) {
-            return $rateResult;
+        // 频率限制检查（如果启用了 rate_limit 规则）
+        if ($this->isRuleEnabled('rate_limit', $enabledRules)) {
+            $rateResult = $this->checkRateLimit($requestData);
+            if ($rateResult->isBlocked()) {
+                return $rateResult;
+            }
         }
         
         return WafResult::allow();
+    }
+    
+    /**
+     * 检查规则是否启用
+     */
+    private function isRuleEnabled(string $ruleName, ?array $enabledRules = null): bool
+    {
+        if ($enabledRules === null) {
+            // 使用全局配置
+            $globalEnabled = $this->config['rules']['enabled'] ?? [];
+            return in_array($ruleName, $globalEnabled);
+        }
+        
+        // 使用传入的启用规则列表
+        return in_array($ruleName, $enabledRules);
     }
     
     /**
@@ -129,13 +154,25 @@ class QuickDetector
     
     /**
      * 基础正则检查
+     * 
+     * @param array $requestData 请求数据
+     * @param array|null $enabledRules 启用的规则列表（可选）
      */
-    private function checkBasicRegex(array $requestData): WafResult
+    private function checkBasicRegex(array $requestData, ?array $enabledRules = null): WafResult
     {
         $patterns = $this->getBasicPatterns();
+        
+        // 同时检测原始内容和 URL 解码后的内容
         $content = json_encode($requestData);
+        $decodedContent = $this->decodeUrlEncodedContent($content);
         
         foreach ($patterns as $pattern => $rule) {
+            // 检查规则是否启用
+            if (!$this->isRuleEnabled($rule, $enabledRules)) {
+                continue; // 跳过未启用的规则
+            }
+            
+            // 检测原始内容
             if (preg_match($pattern, $content)) {
                 return WafResult::block(
                     $rule,
@@ -144,9 +181,28 @@ class QuickDetector
                     ['pattern' => $pattern, 'content' => $content]
                 );
             }
+            
+            // 检测 URL 解码后的内容
+            if (preg_match($pattern, $decodedContent)) {
+                return WafResult::block(
+                    $rule,
+                    "Request matched pattern: {$pattern} (URL decoded)",
+                    403,
+                    ['pattern' => $pattern, 'content' => $decodedContent]
+                );
+            }
         }
         
         return WafResult::allow();
+    }
+    
+    /**
+     * 解码 URL 编码的内容
+     */
+    private function decodeUrlEncodedContent(string $content): string
+    {
+        // 解码常见的 URL 编码字符
+        return urldecode($content);
     }
     
     /**
@@ -209,7 +265,17 @@ class QuickDetector
     private function getBasicPatterns(): array
     {
         return [
+            // SQL 注入模式
             '/(union\s+select)/i' => 'sql_injection',
+            '/(or\s+1\s*=\s*1)/i' => 'sql_injection',  // OR 1=1 逻辑攻击
+            '/(and\s+1\s*=\s*1)/i' => 'sql_injection',  // AND 1=1 逻辑攻击
+            '/(select\s+.*\s+from)/i' => 'sql_injection',  // SELECT 查询攻击
+            '/(insert\s+into)/i' => 'sql_injection',  // INSERT 注入攻击
+            '/(delete\s+from)/i' => 'sql_injection',  // DELETE 注入攻击
+            '/(drop\s+table)/i' => 'sql_injection',  // DROP TABLE 攻击
+            '/(sleep\s*\()/i' => 'sql_injection',  // SLEEP 时间盲注
+            '/(benchmark\s*\()/i' => 'sql_injection',  // BENCHMARK 时间盲注
+            // XSS 模式
             '/(<script[^>]*>)/i' => 'xss',
             '/(javascript\s*:)/i' => 'xss',
             '/(on\w+\s*=)/i' => 'xss',
@@ -280,15 +346,29 @@ class QuickDetector
         yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步处理
         
         $patterns = $this->getBasicPatterns();
+        
+        // 同时检测原始内容和 URL 解码后的内容
         $content = json_encode($requestData);
+        $decodedContent = $this->decodeUrlEncodedContent($content);
         
         foreach ($patterns as $pattern => $rule) {
+            // 检测原始内容
             if (preg_match($pattern, $content)) {
                 return [WafResult::block(
                     $rule,
                     "Request matched pattern: {$pattern}",
                     403,
                     ['pattern' => $pattern, 'content' => $content]
+                )];
+            }
+            
+            // 检测 URL 解码后的内容
+            if (preg_match($pattern, $decodedContent)) {
+                return [WafResult::block(
+                    $rule,
+                    "Request matched pattern: {$pattern} (URL decoded)",
+                    403,
+                    ['pattern' => $pattern, 'content' => $decodedContent]
                 )];
             }
         }

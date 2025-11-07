@@ -73,7 +73,7 @@ class TiangangGateway
             if ($wafResult->isBlocked()) {
                 // 异步记录安全日志（后台任务）
                 $this->queueAsyncLog($request, $wafResult, microtime(true) - $startTime);
-                return $this->createBlockResponse($wafResult);
+                return $this->createBlockResponse($wafResult, $request);
             }
             
             // 同步代理转发（核心功能，必须同步）
@@ -266,19 +266,115 @@ class TiangangGateway
     /**
      * 创建拦截响应
      */
-    private function createBlockResponse($wafResult): Response
+    private function createBlockResponse($wafResult, Request $request): Response
     {
         $statusCode = $wafResult->getStatusCode();
         $message = $wafResult->getMessage();
+        $rule = $wafResult->getRule();
         
+        // 检查请求是否接受 HTML（浏览器请求）
+        $acceptHeader = $request->header('Accept', '');
+        $wantsHtml = strpos($acceptHeader, 'text/html') !== false || 
+                     strpos($acceptHeader, '*/*') !== false;
+        
+        if ($wantsHtml) {
+            // 返回 HTML 错误页面
+            $html = $this->generateBlockHtmlPage($statusCode, $message, $rule);
+            return new Response($statusCode, [
+                'Content-Type' => 'text/html; charset=utf-8',
+            ], $html);
+        }
+        
+        // 返回 JSON 响应（API 请求）
         return new Response($statusCode, [
-            'Content-Type' => 'application/json',
+            'Content-Type' => 'application/json; charset=utf-8',
         ], json_encode([
             'error' => 'Request Blocked by WAF',
             'message' => $message,
-            'rule' => $wafResult->getRule(),
+            'rule' => $rule,
             'timestamp' => time(),
-        ]));
+        ], JSON_UNESCAPED_SLASHES));
+    }
+    
+    /**
+     * 生成 HTML 拦截页面
+     */
+    private function generateBlockHtmlPage(int $statusCode, string $message, string $rule): string
+    {
+        $statusText = $statusCode === 403 ? 'Forbidden' : 'Blocked';
+        
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>请求被拦截 - 天罡 WAF</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #e74c3c;
+            margin: 0 0 20px 0;
+            font-size: 32px;
+        }
+        .status {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        .message {
+            background: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+            border-radius: 4px;
+        }
+        .rule {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            color: #95a5a6;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ 请求被拦截</h1>
+        <div class="status">HTTP {$statusCode} - {$statusText}</div>
+        <div class="message">
+            <strong>拦截原因：</strong><span class="rule">{$rule}</span><br>
+            <strong>详细信息：</strong>{$message}
+        </div>
+        <div class="footer">
+            <p>您的请求已被天罡 WAF 安全防护系统拦截</p>
+            <p>如有疑问，请联系系统管理员</p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
     }
     
     /**

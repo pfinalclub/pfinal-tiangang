@@ -39,9 +39,12 @@ class WafMiddleware
     {
         // 提取请求数据
         $requestData = $this->extractRequestData($request);
+        
+        // 获取当前请求的域名映射配置，确定启用的 WAF 规则
+        $enabledRules = $this->getEnabledRulesForRequest($request);
 
-        // 快速检测（同步）
-        $quickResult = $this->quickDetector->check($requestData);
+        // 快速检测（同步），传入启用的规则列表
+        $quickResult = $this->quickDetector->check($requestData, $enabledRules);
         if ($quickResult->isBlocked()) {
             return $quickResult;
         }
@@ -84,6 +87,100 @@ class WafMiddleware
 
         // 没有检测到威胁，放行
         return WafResult::allow();
+    }
+
+    /**
+     * 获取当前请求启用的 WAF 规则列表
+     * 
+     * 根据域名映射配置中的 waf_rules 来确定启用的规则
+     * 如果没有找到域名映射或未配置 waf_rules，使用全局配置
+     */
+    private function getEnabledRulesForRequest(Request $request): array
+    {
+        try {
+            // 获取域名映射配置
+            $proxyConfig = $this->configManager->get('proxy') ?? [];
+            $domainMappings = $proxyConfig['domain_mappings'] ?? [];
+            
+            // 获取请求的 Host
+            $host = $request->header('Host', '');
+            if ($host) {
+                // 移除端口号（如果有）
+                $host = preg_replace('/:\d+$/', '', $host);
+                $host = strtolower($host);
+                
+                // 查找匹配的域名映射
+                foreach ($domainMappings as $mapping) {
+                    if (!($mapping['enabled'] ?? true)) {
+                        continue;
+                    }
+                    
+                    $domain = $mapping['domain'] ?? '';
+                    if (empty($domain)) {
+                        continue;
+                    }
+                    
+                    $matched = false;
+                    
+                    // 精确匹配
+                    if (strtolower($domain) === $host) {
+                        $matched = true;
+                    }
+                    // 通配符匹配（如 *.api.smm.cn）
+                    elseif (strpos($domain, '*') !== false) {
+                        $pattern = str_replace(['.', '*'], ['\.', '.*'], $domain);
+                        $pattern = '/^' . $pattern . '$/i';
+                        if (preg_match($pattern, $host)) {
+                            $matched = true;
+                        }
+                    }
+                    
+                    if ($matched) {
+                        // 找到匹配的域名映射，返回配置的 waf_rules
+                        $wafRules = $mapping['waf_rules'] ?? [];
+                        if (is_array($wafRules) && !empty($wafRules)) {
+                            return $wafRules;
+                        }
+                        // 如果配置了但为空数组，表示不启用任何规则
+                        if (is_array($wafRules)) {
+                            return [];
+                        }
+                    }
+                }
+            }
+            
+            // 检查路径映射
+            $pathMappings = $proxyConfig['path_mappings'] ?? [];
+            $path = $request->path();
+            
+            foreach ($pathMappings as $mapping) {
+                if (!($mapping['enabled'] ?? true)) {
+                    continue;
+                }
+                
+                $mappingPath = $mapping['path'] ?? '';
+                if (empty($mappingPath)) {
+                    continue;
+                }
+                
+                // 精确匹配或前缀匹配
+                if ($path === $mappingPath || str_starts_with($path, rtrim($mappingPath, '/') . '/')) {
+                    $wafRules = $mapping['waf_rules'] ?? [];
+                    if (is_array($wafRules) && !empty($wafRules)) {
+                        return $wafRules;
+                    }
+                    if (is_array($wafRules)) {
+                        return [];
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // 配置加载失败，记录错误但继续使用全局配置
+            error_log('Failed to get enabled rules for request: ' . $e->getMessage());
+        }
+        
+        // 没有找到匹配的映射，使用全局配置
+        return $this->config['rules']['enabled'] ?? ['sql_injection', 'xss', 'rate_limit', 'ip_blacklist'];
     }
 
     /**
