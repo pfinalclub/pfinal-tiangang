@@ -79,16 +79,24 @@ class CsrfMiddleware
         $token = $this->extractToken($request);
         
         if (empty($token)) {
+            error_log('CSRF Token missing. Path: ' . $request->path() . ', Method: ' . $request->method());
             return false;
         }
         
         // 从 Session 中获取预期的 Token
         $sessionId = $request->cookie('waf_session');
         if (!$sessionId) {
+            error_log('CSRF Session ID missing. Path: ' . $request->path());
             return false;
         }
         
-        return $this->validateTokenForSession($sessionId, $token);
+        $isValid = $this->validateTokenForSession($sessionId, $token);
+        
+        if (!$isValid) {
+            error_log('CSRF Token validation failed. Path: ' . $request->path() . ', Session: ' . substr($sessionId, 0, 8) . '...');
+        }
+        
+        return $isValid;
     }
     
     /**
@@ -136,9 +144,31 @@ class CsrfMiddleware
             }
         }
         
-        // 从 POST 数据获取（表单提交）
-        parse_str($request->rawBody(), $postData);
-        return $postData['_token'] ?? $postData['csrf_token'] ?? null;
+        // 从 POST 数据获取（支持 application/x-www-form-urlencoded 和 multipart/form-data）
+        // Workerman 的 Request 对象会自动解析 POST 数据
+        $postData = $request->post();
+        if (!empty($postData)) {
+            if (isset($postData['_token'])) {
+                return $postData['_token'];
+            }
+            if (isset($postData['csrf_token'])) {
+                return $postData['csrf_token'];
+            }
+        }
+        
+        // 如果 POST 数据为空，尝试从 rawBody 解析（兼容性处理）
+        $rawBody = $request->rawBody();
+        if (!empty($rawBody)) {
+            parse_str($rawBody, $parsedData);
+            if (isset($parsedData['_token'])) {
+                return $parsedData['_token'];
+            }
+            if (isset($parsedData['csrf_token'])) {
+                return $parsedData['csrf_token'];
+            }
+        }
+        
+        return null;
     }
     
     /**

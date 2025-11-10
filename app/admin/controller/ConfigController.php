@@ -259,7 +259,9 @@ class ConfigController extends BaseController
      */
     public function configPage(Request $request)
     {
-        return $this->view('config.index');
+        return $this->view('config.index', [
+            'csrfToken' => $this->getCsrfToken($request),
+        ]);
     }
     
     /**

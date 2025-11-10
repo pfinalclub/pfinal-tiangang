@@ -340,3 +340,13 @@
 [2025-11-07 11:21:01] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"372.45ms","size":111386}
 [2025-11-07 11:21:01] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"260.4ms","size":533}
 [2025-11-07 11:21:01] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"266.93ms","size":50}
+[2025-11-10 01:07:27] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"92.15ms","size":555}
+[2025-11-10 01:07:28] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":404,"duration":"3.23ms","size":555}
+[2025-11-10 01:07:34] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"7.31ms","size":555}
+[2025-11-10 01:07:37] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"3.1ms","size":555}
+[2025-11-10 01:08:30] info: Proxy performance {"url":"\/","method":"GET","status_code":301,"duration":"4250.71ms","size":0}
+[2025-11-10 01:08:48] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"4.04ms","size":555}
+[2025-11-10 01:21:59] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"4.55ms","size":555}
+[2025-11-10 01:37:33] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"7.8ms","size":555}
+[2025-11-10 01:38:25] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"26.93ms","size":555}
+[2025-11-10 01:38:34] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"4.82ms","size":555}

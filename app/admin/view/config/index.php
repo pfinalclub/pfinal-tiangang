@@ -304,6 +304,8 @@
     
     <script src="//unpkg.com/layui@2.12.1/dist/layui.js"></script>
     <script>
+        // CSRF Token
+        const csrfToken = '<?= htmlspecialchars($csrfToken ?? '') ?>';
         layui.use(['layer', 'form'], function(){
             var layer = layui.layer;
             var form = layui.form;
@@ -435,6 +437,7 @@
             try {
                 const formData = new FormData();
                 formData.append("domain", domain);
+                formData.append("_token", csrfToken);
                 
                 const response = await fetch("/admin/api/config/domain-mapping/delete", {
                     method: "POST",
@@ -571,8 +574,12 @@
         async function deleteMapping(path) {
             layer.confirm("确定要删除这个路径映射吗？", {icon: 3, title: "确认删除"}, async function(index) {
                 try {
+                    const formData = new FormData();
+                    formData.append("_token", csrfToken);
+                    
                     const response = await fetch("/admin/api/config/path-mapping/delete?path=" + encodeURIComponent(path), {
-                        method: "POST"
+                        method: "POST",
+                        body: formData
                     });
                     const result = await response.json();
                     

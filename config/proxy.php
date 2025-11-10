@@ -52,6 +52,17 @@ return [
 ),
             'enabled' => true,
         ],
+        [
+            'domain' => 'dev.local.wd.cn',
+            'backend' => 'primary',
+            'waf_rules' => array (
+  0 => 'sql_injection',
+  1 => 'xss',
+  2 => 'rate_limit',
+  3 => 'ip_blacklist',
+),
+            'enabled' => true,
+        ],
     ],
     
     // 路径映射配置（路径前缀 -> 后端服务名称）- 补充路由方式
