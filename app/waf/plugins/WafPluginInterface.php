@@ -32,7 +32,7 @@ interface WafPluginInterface
     /**
      * 检测请求
      */
-    public function detect(array $requestData): \Generator|array;
+    public function detect(array $requestData): mixed;
     
     /**
      * 获取插件描述
@@ -43,4 +43,18 @@ interface WafPluginInterface
      * 获取插件配置
      */
     public function getConfig(): array;
+    
+    /**
+     * 是否支持快速检测
+     * 
+     * @return bool true 表示支持同步快速检测，false 表示仅支持异步检测
+     */
+    public function supportsQuickDetection(): bool;
+    
+    /**
+     * 是否需要许可证
+     * 
+     * @return bool true 表示需要付费许可证，false 表示免费插件
+     */
+    public function requiresLicense(): bool;
 }

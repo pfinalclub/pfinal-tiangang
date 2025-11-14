@@ -10,30 +10,6 @@ return [
     
     // 后端服务配置
     'backends' => [
-        [
-            'name' => 'primary',
-            'url' => 'http://localhost:8080',
-            'weight' => 1,
-            'health_url' => 'http://localhost:8080/health',
-            'health_timeout' => 5,
-            'recovery_time' => 60,
-            'health_check' => array (
-  'expected_status' => 'ok',
-  'expected_content' => 'healthy',
-),
-        ],
-        [
-            'name' => 'secondary',
-            'url' => 'http://localhost:8081',
-            'weight' => 1,
-            'health_url' => 'http://localhost:8081/health',
-            'health_timeout' => 5,
-            'recovery_time' => 60,
-            'health_check' => array (
-  'expected_status' => 'ok',
-  'expected_content' => 'healthy',
-),
-        ],
     ],
     
     // 域名映射配置（域名 -> 后端服务名称）- 主要路由方式
@@ -42,26 +18,14 @@ return [
     // 优先级：域名映射 > 路径映射 > 默认后端
     'domain_mappings' => [
         [
-            'domain' => 'dev.local.crm.cn',
-            'backend' => 'primary',
-            'waf_rules' => array (
-  0 => 'sql_injection',
-  1 => 'xss',
-  2 => 'rate_limit',
-  3 => 'ip_blacklist',
-),
-            'enabled' => true,
-        ],
-        [
             'domain' => 'dev.local.wd.cn',
-            'backend' => 'primary',
+            'backend' => 'http://localhost:8080',
             'waf_rules' => array (
   0 => 'sql_injection',
   1 => 'xss',
-  2 => 'rate_limit',
-  3 => 'ip_blacklist',
 ),
             'enabled' => true,
+            'preserve_host' => true,
         ],
     ],
     

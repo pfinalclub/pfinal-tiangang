@@ -21,13 +21,32 @@ class ProxyHandler
     private HttpClient $httpClient;
     private ?array $config;
     private ?array $backendConfig;
+    private int $configLastModified = 0; // 配置文件的最后修改时间
     
     public function __construct()
     {
         $this->configManager = new ConfigManager();
+        $this->reloadConfig();
+        $this->httpClient = $this->createHttpClient();
+    }
+    
+    /**
+     * 重新加载配置（如果配置文件已更新）
+     */
+    private function reloadConfig(): void
+    {
+        $configFile = realpath(__DIR__ . '/../../../config/proxy.php');
+        if ($configFile && file_exists($configFile)) {
+            $lastModified = filemtime($configFile);
+            // 如果配置文件已更新，重新加载
+            if ($lastModified > $this->configLastModified) {
+                $this->configManager->reload();
+                $this->configLastModified = $lastModified;
+            }
+        }
+        
         $this->config = $this->configManager->get('waf') ?? [];
         $this->backendConfig = $this->configManager->get('proxy') ?? [];
-        $this->httpClient = $this->createHttpClient();
     }
     
     /**
@@ -36,6 +55,9 @@ class ProxyHandler
     public function forwardSync(Request $request): Response
     {
         $startTime = microtime(true);
+        
+        // 重新加载配置（如果已更新）
+        $this->reloadConfig();
         
         // 重置当前映射
         $this->currentMapping = null;
@@ -72,25 +94,25 @@ class ProxyHandler
     /**
      * 异步转发请求到后端（保留用于后台任务）
      */
-    public function forward(Request $request): \Generator
+    public function forward(Request $request): Response
     {
         $startTime = microtime(true);
         
         try {
             // 异步构建目标 URL
-            $targetUrl = yield create_task($this->asyncBuildTargetUrl($request));
+            $targetUrl = create_task(fn() => $this->asyncBuildTargetUrl($request));
             
             // 异步构建请求选项
-            $options = yield create_task($this->asyncBuildRequestOptions($request));
+            $options = create_task(fn() => $this->asyncBuildRequestOptions($request));
             
             // 异步发送请求
-            $response = yield create_task($this->asyncHttpRequest($request, $targetUrl, $options));
+            $response = create_task(fn() => $this->asyncHttpRequest($request, $targetUrl, $options));
             
             // 异步处理响应
-            $proxyResponse = yield create_task($this->asyncProcessResponse($response, $request));
+            $proxyResponse = create_task(fn() => $this->asyncProcessResponse($response, $request));
             
             // 异步记录性能指标
-            create_task($this->asyncLogPerformance($request, $proxyResponse, microtime(true) - $startTime));
+            create_task(fn() => $this->asyncLogPerformance($request, $proxyResponse, microtime(true) - $startTime));
             
             return $proxyResponse;
             
@@ -104,10 +126,10 @@ class ProxyHandler
     /**
      * 异步构建目标 URL（支持路径映射）
      */
-    private function asyncBuildTargetUrl(Request $request): \Generator
+    private function asyncBuildTargetUrl(Request $request): string
     {
         // 模拟异步 URL 构建
-        yield sleep(0); // 修复：sleep 需要整数
+        sleep(0); // 修复：sleep 需要整数
         
         // 使用同步方法构建 URL（已支持路径映射）
         return $this->buildTargetUrl($request);
@@ -116,10 +138,10 @@ class ProxyHandler
     /**
      * 异步构建请求选项
      */
-    private function asyncBuildRequestOptions(Request $request): \Generator
+    private function asyncBuildRequestOptions(Request $request): array
     {
         // 模拟异步选项构建
-        yield sleep(0); // 修复：sleep 需要整数
+        sleep(0); // 修复：sleep 需要整数
         
         $options = [
             'timeout' => $this->backendConfig['timeout'] ?? 30,
@@ -143,10 +165,10 @@ class ProxyHandler
     /**
      * 异步 HTTP 请求
      */
-    private function asyncHttpRequest(Request $request, string $targetUrl, array $options): \Generator
+    private function asyncHttpRequest(Request $request, string $targetUrl, array $options): mixed
     {
         // 模拟异步 HTTP 请求
-        yield sleep(0); // 修复：sleep 需要整数
+        sleep(0); // 修复：sleep 需要整数
         
         return $this->httpClient->request(
             $request->method(),
@@ -158,10 +180,10 @@ class ProxyHandler
     /**
      * 异步处理响应
      */
-    private function asyncProcessResponse($response, Request $request): \Generator
+    private function asyncProcessResponse($response, Request $request): Response
     {
         // 模拟异步响应处理
-        yield sleep(0); // 修复：sleep 需要整数
+        sleep(0); // 修复：sleep 需要整数
         
         $statusCode = $response->getStatusCode();
         $headers = $this->filterResponseHeaders($response->getHeaders());
@@ -180,10 +202,10 @@ class ProxyHandler
     /**
      * 异步记录性能指标
      */
-    private function asyncLogPerformance(Request $request, Response $response, float $duration): \Generator
+    private function asyncLogPerformance(Request $request, Response $response, float $duration): void
     {
         // 模拟异步日志记录
-        yield sleep(0); // 修复：sleep 需要整数，使用 0 表示不等待
+        sleep(0); // 修复：sleep 需要整数，使用 0 表示不等待
         
         try {
             // Workerman Response 对象使用 rawBody() 方法获取 body
@@ -352,6 +374,18 @@ class ProxyHandler
             'verify' => $this->backendConfig['verify_ssl'] ?? true,
         ];
         
+        // ========================================
+        // 透明代理模式：保持原始 Host 头
+        // ========================================
+        $mapping = $this->currentMapping ?? [];
+        if ($mapping['preserve_host'] ?? false) {
+            $originalHost = $request->header('Host');
+            if ($originalHost) {
+                // 透明模式下，使用原始域名作为 Host
+                $options['headers']['Host'] = $originalHost;
+            }
+        }
+        
         // 添加请求体
         if (in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
             $body = $request->rawBody();
@@ -407,17 +441,55 @@ class ProxyHandler
             $filteredHeaders[$name] = $value;
         }
         
-        // 添加代理相关头（使用验证过的值）
+        // ========================================
+        // 添加标准代理头部（RFC 标准）
+        // ========================================
         if ($request) {
+            // 1. 客户端真实 IP
             $clientIp = $this->getClientIp($request);
             if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
-                $filteredHeaders['X-Forwarded-For'] = $clientIp;
+                // X-Forwarded-For: 累加 IP 链（标准做法）
+                $existingForwardedFor = $headers['X-Forwarded-For'] ?? '';
+                if ($existingForwardedFor) {
+                    $filteredHeaders['X-Forwarded-For'] = $existingForwardedFor . ', ' . $clientIp;
+                } else {
+                    $filteredHeaders['X-Forwarded-For'] = $clientIp;
+                }
+                
+                // X-Real-IP: 直接设置（不累加）
                 $filteredHeaders['X-Real-IP'] = $clientIp;
             }
             
+            // 2. 原始协议
             $protocol = $this->getProtocol($request);
             if (in_array($protocol, ['http', 'https'])) {
-                $filteredHeaders['X-Forwarded-Proto'] = $protocol;
+                // 保留原始的 X-Forwarded-Proto，如果没有则设置
+                if (!isset($headers['X-Forwarded-Proto'])) {
+                    $filteredHeaders['X-Forwarded-Proto'] = $protocol;
+                }
+            }
+            
+            // 3. 原始主机名（透明代理的关键）
+            $host = $request->header('Host');
+            if ($host) {
+                // 保留原始 Host 作为 X-Forwarded-Host
+                if (!isset($headers['X-Forwarded-Host'])) {
+                    // 移除端口，只保留主机名
+                    $hostWithoutPort = preg_replace('/:\d+$/', '', $host);
+                    if (!empty($hostWithoutPort)) {
+                        $filteredHeaders['X-Forwarded-Host'] = $hostWithoutPort;
+                    }
+                }
+                
+                // 4. 原始端口
+                if (!isset($headers['X-Forwarded-Port'])) {
+                    if (preg_match('/:(\d+)$/', $host, $matches)) {
+                        $filteredHeaders['X-Forwarded-Port'] = $matches[1];
+                    } else {
+                        // 根据协议推断端口
+                        $filteredHeaders['X-Forwarded-Port'] = ($protocol === 'https') ? '443' : '80';
+                    }
+                }
             }
         }
         
@@ -697,15 +769,41 @@ class ProxyHandler
         if ($host) {
             // 移除端口号（如果有）
             $host = preg_replace('/:\d+$/', '', $host);
+            // 转换为小写进行匹配（域名不区分大小写）
+            $host = strtolower($host);
+            
+            // 调试日志：记录请求的 Host（写入 app.log）
+            if (function_exists('logger')) {
+                logger('info', "getBackendConfig: Request Host = {$host}");
+            } else {
+                error_log("getBackendConfig: Request Host = {$host}");
+            }
             
             $domainMapping = $this->findDomainMapping($host);
             if ($domainMapping) {
                 // 找到域名映射，解析后端配置（支持 name 或直接 URL）
-                $backend = $this->resolveBackend($domainMapping['backend'] ?? '');
+                $backendNameOrUrl = $domainMapping['backend'] ?? '';
+                if (function_exists('logger')) {
+                    logger('info', "Resolving backend for domain mapping: {$host} -> {$backendNameOrUrl}");
+                } else {
+                    error_log("Resolving backend for domain mapping: {$host} -> {$backendNameOrUrl}");
+                }
+                $backend = $this->resolveBackend($backendNameOrUrl);
                 if ($backend && isset($backend['url'])) {
+                    if (function_exists('logger')) {
+                        logger('info', "Backend resolved: {$host} -> {$backend['url']}");
+                    } else {
+                        error_log("Backend resolved: {$host} -> {$backend['url']}");
+                    }
                     // 保存映射信息，供 buildTargetUrl 使用
                     $this->currentMapping = $domainMapping;
                     return $backend;
+                } else {
+                    if (function_exists('logger')) {
+                        logger('error', "Failed to resolve backend for: {$backendNameOrUrl}");
+                    } else {
+                        error_log("Failed to resolve backend for: {$backendNameOrUrl}");
+                    }
                 }
             }
         }
@@ -725,6 +823,11 @@ class ProxyHandler
         }
         
         // 3. 没有找到映射，返回默认后端
+        if (function_exists('logger')) {
+            logger('info', "getBackendConfig: No mapping found for host, using default backend");
+        } else {
+            error_log("getBackendConfig: No mapping found, using default backend");
+        }
         return $this->getDefaultBackend();
     }
     
@@ -737,11 +840,21 @@ class ProxyHandler
     private function resolveBackend(string $backend): ?array
     {
         if (empty($backend)) {
+            if (function_exists('logger')) {
+                logger('error', "resolveBackend: empty backend parameter");
+            } else {
+                error_log("resolveBackend: empty backend parameter");
+            }
             return null;
         }
         
         // 如果 backend 是 URL 格式，直接使用
         if (filter_var($backend, FILTER_VALIDATE_URL)) {
+            if (function_exists('logger')) {
+                logger('info', "resolveBackend: backend is a URL: {$backend}");
+            } else {
+                error_log("resolveBackend: backend is a URL: {$backend}");
+            }
             return [
                 'name' => 'direct',
                 'url' => $backend,
@@ -753,11 +866,26 @@ class ProxyHandler
         }
         
         // 否则，通过 name 查找后端服务
+        if (function_exists('logger')) {
+            logger('info', "resolveBackend: backend is a name, looking up: {$backend}");
+        } else {
+            error_log("resolveBackend: backend is a name, looking up: {$backend}");
+        }
         $foundBackend = $this->findBackendByName($backend);
         if ($foundBackend && isset($foundBackend['url'])) {
+            if (function_exists('logger')) {
+                logger('info', "resolveBackend: found backend by name: {$backend} -> {$foundBackend['url']}");
+            } else {
+                error_log("resolveBackend: found backend by name: {$backend} -> {$foundBackend['url']}");
+            }
             return $foundBackend;
         }
         
+        if (function_exists('logger')) {
+            logger('error', "resolveBackend: backend not found: {$backend}");
+        } else {
+            error_log("resolveBackend: backend not found: {$backend}");
+        }
         return null;
     }
     
@@ -773,6 +901,15 @@ class ProxyHandler
     {
         $mappings = $this->backendConfig['domain_mappings'] ?? [];
         
+        // 调试日志：记录所有域名映射
+        if (function_exists('logger')) {
+            logger('info', "findDomainMapping: Looking for domain mapping", [
+                'host' => $host,
+                'total_mappings' => count($mappings),
+                'mappings' => array_map(function($m) { return $m['domain'] ?? 'unknown'; }, $mappings)
+            ]);
+        }
+        
         // 先匹配精确域名，再匹配通配符
         // 1. 精确匹配
         foreach ($mappings as $mapping) {
@@ -785,8 +922,16 @@ class ProxyHandler
                 continue;
             }
             
-            // 精确匹配
-            if ($domain === $host) {
+            // 精确匹配（域名不区分大小写）
+            $domainLower = strtolower($domain);
+            $hostLower = strtolower($host);
+            if ($domainLower === $hostLower) {
+                // 调试日志
+                if (function_exists('logger')) {
+                    logger('info', "Domain mapping matched: {$host} -> {$mapping['backend']}");
+                } else {
+                    error_log("Domain mapping matched: {$host} -> {$mapping['backend']}");
+                }
                 return $mapping;
             }
         }
@@ -807,10 +952,22 @@ class ProxyHandler
             $pattern = '/^' . $pattern . '$/';
             
             if (preg_match($pattern, $host)) {
+                // 调试日志
+                if (function_exists('logger')) {
+                    logger('info', "Domain mapping matched (wildcard): {$host} -> {$mapping['backend']}");
+                } else {
+                    error_log("Domain mapping matched (wildcard): {$host} -> {$mapping['backend']}");
+                }
                 return $mapping;
             }
         }
         
+        // 调试日志：没有找到匹配的域名映射
+        if (function_exists('logger')) {
+            logger('info', "No domain mapping found for host: {$host}");
+        } else {
+            error_log("No domain mapping found for host: {$host}");
+        }
         return null;
     }
     
@@ -865,19 +1022,39 @@ class ProxyHandler
     private function getDefaultBackend(): array
     {
         $defaultName = $this->backendConfig['default_backend'] ?? 'primary';
+        if (function_exists('logger')) {
+            logger('info', "getDefaultBackend: Looking for default backend '{$defaultName}'");
+        } else {
+            error_log("getDefaultBackend: Looking for default backend '{$defaultName}'");
+        }
         $backend = $this->findBackendByName($defaultName);
         
         if ($backend) {
+            if (function_exists('logger')) {
+                logger('info', "getDefaultBackend: Found default backend: {$backend['url']}");
+            } else {
+                error_log("getDefaultBackend: Found default backend: {$backend['url']}");
+            }
             return $backend;
         }
         
         // 如果找不到，返回第一个后端
         $backends = $this->backendConfig['backends'] ?? [];
         if (!empty($backends)) {
+            if (function_exists('logger')) {
+                logger('warning', "getDefaultBackend: Default backend '{$defaultName}' not found, using first backend: {$backends[0]['name']} -> {$backends[0]['url']}");
+            } else {
+                error_log("getDefaultBackend: Default backend '{$defaultName}' not found, using first backend: {$backends[0]['name']} -> {$backends[0]['url']}");
+            }
             return $backends[0];
         }
         
         // 最后的默认值
+        if (function_exists('logger')) {
+            logger('warning', "getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080");
+        } else {
+            error_log("getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080");
+        }
         return [
             'url' => 'http://localhost:8080',
             'timeout' => 30,
@@ -895,7 +1072,7 @@ class ProxyHandler
     private function queueAsyncLogPerformance(Request $request, Response $response, float $duration): void
     {
         // Workerman 本身就是异步事件驱动的，直接执行异步任务即可
-        \PfinalClub\Asyncio\run($this->asyncLogPerformance($request, $response, $duration));
+        \PfinalClub\Asyncio\run(fn() => $this->asyncLogPerformance($request, $response, $duration));
     }
 
     /**

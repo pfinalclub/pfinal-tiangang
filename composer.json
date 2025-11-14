@@ -4,7 +4,7 @@
     "type": "project",
     "require": {
         "php": ">=8.3",
-        "pfinalclub/asyncio": "^1.0",
+        "pfinalclub/asyncio": "^2.1",
         "workerman/workerman": "^4.1",
         "symfony/yaml": "^6.0",
         "predis/predis": "^2.0",
@@ -20,7 +20,8 @@
     },
     "autoload": {
         "psr-4": {
-            "app\\": "app/"
+            "app\\": "app/",
+            "Tiangang\\Waf\\Plugins\\Waf\\": "plugins/waf/"
         },
         "files": [
             "app/admin/helpers/helpers.php"

@@ -4,6 +4,7 @@ namespace app\waf\detectors;
 
 use app\waf\core\WafResult;
 use app\waf\config\ConfigManager;
+use app\waf\plugins\PluginManager;
 use Predis\Client as RedisClient;
 
 /**
@@ -14,30 +15,36 @@ use Predis\Client as RedisClient;
 class QuickDetector
 {
     private ConfigManager $configManager;
+    private PluginManager $pluginManager;
     private ?RedisClient $redis;
     private ?array $config;
     
-    public function __construct()
+    public function __construct(ConfigManager $configManager, PluginManager $pluginManager)
     {
-        $this->configManager = new ConfigManager();
-        $this->config = $this->configManager->get('waf') ?? [];
+        $this->configManager = $configManager;
+        $this->pluginManager = $pluginManager;
+        $this->config = $configManager->get('waf') ?? [];
         $this->redis = $this->getRedisClient();
     }
     
     /**
      * 异步快速检测
      */
-    public function checkAsync(array $requestData): \Generator
+    public function checkAsync(array $requestData, ?array $enabledPlugins = null): WafResult
     {
-        // 并发执行多个检测
-        $results = yield \PfinalClub\Asyncio\gather([
+        // 获取启用的插件
+        if ($enabledPlugins === null) {
+            $enabledPlugins = $this->pluginManager->getAuthorizedPlugins();
+        }
+        
+        // 并发执行IP黑名单检查和插件检测
+        $results = \PfinalClub\Asyncio\gather(
             $this->checkIpBlacklistAsync($requestData['ip']),
-            $this->checkBasicRegexAsync($requestData),
-            $this->checkRateLimitAsync($requestData)
-        ]);
+            $this->checkWithPluginsAsync($requestData, $enabledPlugins)
+        );
 
         // 合并结果
-        $allResults = array_merge($results[0], $results[1], $results[2]);
+        $allResults = array_merge($results[0], $results[1]);
         
         if (empty($allResults)) {
             return WafResult::allow();
@@ -51,9 +58,9 @@ class QuickDetector
      * 快速检测（同步版本，保留兼容性）
      * 
      * @param array $requestData 请求数据
-     * @param array $enabledRules 启用的规则列表（可选，如果不提供则使用全局配置）
+     * @param array $enabledPlugins 启用的插件类名列表（可选，如果不提供则使用插件管理器）
      */
-    public function check(array $requestData, ?array $enabledRules = null): WafResult
+    public function check(array $requestData, ?array $enabledPlugins = null): WafResult
     {
         // IP 黑名单检查（总是启用）
         $ipResult = $this->checkIpBlacklist($requestData['ip']);
@@ -72,36 +79,49 @@ class QuickDetector
             // IP 不在白名单中，继续检测（会被后续规则拦截）
         }
         
-        // 基础正则检查（根据启用的规则）
-        $regexResult = $this->checkBasicRegex($requestData, $enabledRules);
-        if ($regexResult->isBlocked()) {
-            return $regexResult;
-        }
-        
-        // 频率限制检查（如果启用了 rate_limit 规则）
-        if ($this->isRuleEnabled('rate_limit', $enabledRules)) {
-            $rateResult = $this->checkRateLimit($requestData);
-            if ($rateResult->isBlocked()) {
-                return $rateResult;
-            }
+        // 使用插件系统进行检测
+        $pluginResult = $this->checkWithPlugins($requestData, $enabledPlugins);
+        if ($pluginResult->isBlocked()) {
+            return $pluginResult;
         }
         
         return WafResult::allow();
     }
     
     /**
-     * 检查规则是否启用
+     * 使用插件系统进行检测
      */
-    private function isRuleEnabled(string $ruleName, ?array $enabledRules = null): bool
+    private function checkWithPlugins(array $requestData, ?array $enabledPlugins = null): WafResult
     {
-        if ($enabledRules === null) {
-            // 使用全局配置
-            $globalEnabled = $this->config['rules']['enabled'] ?? [];
-            return in_array($ruleName, $globalEnabled);
+        // 获取启用的插件
+        if ($enabledPlugins === null) {
+            $enabledPlugins = $this->pluginManager->getAuthorizedPlugins();
         }
         
-        // 使用传入的启用规则列表
-        return in_array($ruleName, $enabledRules);
+        // 获取所有插件实例
+        $allPlugins = $this->pluginManager->getAllPlugins();
+        
+        foreach ($allPlugins as $plugin) {
+            $pluginClass = get_class($plugin);
+            
+            // 检查插件是否启用且已授权
+            if (!in_array($pluginClass, $enabledPlugins)) {
+                continue;
+            }
+            
+            // 检查插件是否支持快速检测
+            if (!$plugin->supportsQuickDetection()) {
+                continue;
+            }
+            
+            // 执行插件检测
+            $result = $plugin->check($requestData);
+            if ($result->isBlocked()) {
+                return $result;
+            }
+        }
+        
+        return WafResult::allow();
     }
     
     /**
@@ -152,96 +172,6 @@ class QuickDetector
         return WafResult::block('ip_not_whitelisted', "IP {$ip} is not in whitelist");
     }
     
-    /**
-     * 基础正则检查
-     * 
-     * @param array $requestData 请求数据
-     * @param array|null $enabledRules 启用的规则列表（可选）
-     */
-    private function checkBasicRegex(array $requestData, ?array $enabledRules = null): WafResult
-    {
-        $patterns = $this->getBasicPatterns();
-        
-        // 同时检测原始内容和 URL 解码后的内容
-        $content = json_encode($requestData);
-        $decodedContent = $this->decodeUrlEncodedContent($content);
-        
-        foreach ($patterns as $pattern => $rule) {
-            // 检查规则是否启用
-            if (!$this->isRuleEnabled($rule, $enabledRules)) {
-                continue; // 跳过未启用的规则
-            }
-            
-            // 检测原始内容
-            if (preg_match($pattern, $content)) {
-                return WafResult::block(
-                    $rule,
-                    "Request matched pattern: {$pattern}",
-                    403,
-                    ['pattern' => $pattern, 'content' => $content]
-                );
-            }
-            
-            // 检测 URL 解码后的内容
-            if (preg_match($pattern, $decodedContent)) {
-                return WafResult::block(
-                    $rule,
-                    "Request matched pattern: {$pattern} (URL decoded)",
-                    403,
-                    ['pattern' => $pattern, 'content' => $decodedContent]
-                );
-            }
-        }
-        
-        return WafResult::allow();
-    }
-    
-    /**
-     * 解码 URL 编码的内容
-     */
-    private function decodeUrlEncodedContent(string $content): string
-    {
-        // 解码常见的 URL 编码字符
-        return urldecode($content);
-    }
-    
-    /**
-     * 频率限制检查
-     */
-    private function checkRateLimit(array $requestData): WafResult
-    {
-        $ip = $requestData['ip'];
-        $key = "rate_limit:{$ip}";
-        $limit = $this->config['rules']['rate_limit']['max_requests'] ?? 100;
-        $window = $this->config['rules']['rate_limit']['window'] ?? 60;
-        
-        // 使用 Redis 或文件后备方案
-        if ($this->redis) {
-            try {
-                $current = $this->redis->incr($key);
-                if ($current === 1) {
-                    $this->redis->expire($key, $window);
-                }
-            } catch (\Exception $e) {
-                // Redis 操作失败，使用文件后备方案
-                $current = $this->incrementFileCounter($key, $window);
-            }
-        } else {
-            // 使用文件后备方案
-            $current = $this->incrementFileCounter($key, $window);
-        }
-        
-        if ($current > $limit) {
-            return WafResult::block(
-                'rate_limit',
-                "Rate limit exceeded: {$current}/{$limit} requests per {$window}s",
-                429,
-                ['current' => $current, 'limit' => $limit, 'window' => $window]
-            );
-        }
-        
-        return WafResult::allow();
-    }
     
     /**
      * 获取 IP 黑名单
@@ -259,28 +189,6 @@ class QuickDetector
         return $this->config['rules']['ip_whitelist'] ?? [];
     }
     
-    /**
-     * 获取基础正则模式
-     */
-    private function getBasicPatterns(): array
-    {
-        return [
-            // SQL 注入模式
-            '/(union\s+select)/i' => 'sql_injection',
-            '/(or\s+1\s*=\s*1)/i' => 'sql_injection',  // OR 1=1 逻辑攻击
-            '/(and\s+1\s*=\s*1)/i' => 'sql_injection',  // AND 1=1 逻辑攻击
-            '/(select\s+.*\s+from)/i' => 'sql_injection',  // SELECT 查询攻击
-            '/(insert\s+into)/i' => 'sql_injection',  // INSERT 注入攻击
-            '/(delete\s+from)/i' => 'sql_injection',  // DELETE 注入攻击
-            '/(drop\s+table)/i' => 'sql_injection',  // DROP TABLE 攻击
-            '/(sleep\s*\()/i' => 'sql_injection',  // SLEEP 时间盲注
-            '/(benchmark\s*\()/i' => 'sql_injection',  // BENCHMARK 时间盲注
-            // XSS 模式
-            '/(<script[^>]*>)/i' => 'xss',
-            '/(javascript\s*:)/i' => 'xss',
-            '/(on\w+\s*=)/i' => 'xss',
-        ];
-    }
     
     /**
      * IP 匹配
@@ -316,11 +224,50 @@ class QuickDetector
     }
     
     /**
+     * 异步使用插件系统进行检测
+     */
+    private function checkWithPluginsAsync(array $requestData, ?array $enabledPlugins = null): array
+    {
+        \PfinalClub\Asyncio\sleep(0.001); // 模拟异步处理
+        
+        // 获取启用的插件
+        if ($enabledPlugins === null) {
+            $enabledPlugins = $this->pluginManager->getAuthorizedPlugins();
+        }
+        
+        // 获取所有插件实例
+        $allPlugins = $this->pluginManager->getAllPlugins();
+        
+        $results = [];
+        foreach ($allPlugins as $plugin) {
+            $pluginClass = get_class($plugin);
+            
+            // 检查插件是否启用且已授权
+            if (!in_array($pluginClass, $enabledPlugins)) {
+                continue;
+            }
+            
+            // 检查插件是否支持快速检测
+            if (!$plugin->supportsQuickDetection()) {
+                continue;
+            }
+            
+            // 执行插件检测
+            $result = $plugin->check($requestData);
+            if ($result->isBlocked()) {
+                $results[] = $result;
+            }
+        }
+        
+        return $results;
+    }
+
+    /**
      * 异步检查 IP 黑名单
      */
-    private function checkIpBlacklistAsync(string $ip): \Generator
+    private function checkIpBlacklistAsync(string $ip): array
     {
-        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步查询
+        \PfinalClub\Asyncio\sleep(0.001); // 模拟异步查询
         
         $blacklist = $this->getIpBlacklist();
         
@@ -338,83 +285,6 @@ class QuickDetector
         return [];
     }
 
-    /**
-     * 异步基础正则检查
-     */
-    private function checkBasicRegexAsync(array $requestData): \Generator
-    {
-        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步处理
-        
-        $patterns = $this->getBasicPatterns();
-        
-        // 同时检测原始内容和 URL 解码后的内容
-        $content = json_encode($requestData);
-        $decodedContent = $this->decodeUrlEncodedContent($content);
-        
-        foreach ($patterns as $pattern => $rule) {
-            // 检测原始内容
-            if (preg_match($pattern, $content)) {
-                return [WafResult::block(
-                    $rule,
-                    "Request matched pattern: {$pattern}",
-                    403,
-                    ['pattern' => $pattern, 'content' => $content]
-                )];
-            }
-            
-            // 检测 URL 解码后的内容
-            if (preg_match($pattern, $decodedContent)) {
-                return [WafResult::block(
-                    $rule,
-                    "Request matched pattern: {$pattern} (URL decoded)",
-                    403,
-                    ['pattern' => $pattern, 'content' => $decodedContent]
-                )];
-            }
-        }
-        
-        return [];
-    }
-
-    /**
-     * 异步频率限制检查（修复：支持离线模式）
-     */
-    private function checkRateLimitAsync(array $requestData): \Generator
-    {
-        yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步操作
-        
-        $ip = $requestData['ip'];
-        $key = "rate_limit:{$ip}";
-        $limit = $this->config['rules']['rate_limit']['max_requests'] ?? 100;
-        $window = $this->config['rules']['rate_limit']['window'] ?? 60;
-        
-        // 使用 Redis 或文件后备方案
-        if ($this->redis) {
-            try {
-                $current = $this->redis->incr($key);
-                if ($current === 1) {
-                    $this->redis->expire($key, $window);
-                }
-            } catch (\Exception $e) {
-                // Redis 操作失败，使用文件后备方案
-                $current = $this->incrementFileCounter($key, $window);
-            }
-        } else {
-            // 使用文件后备方案
-            $current = $this->incrementFileCounter($key, $window);
-        }
-        
-        if ($current > $limit) {
-            return [WafResult::block(
-                'rate_limit',
-                "Rate limit exceeded: {$current}/{$limit} requests per {$window}s",
-                429,
-                ['current' => $current, 'limit' => $limit, 'window' => $window]
-            )];
-        }
-        
-        return [];
-    }
 
     /**
      * 获取 Redis 客户端（修复：支持离线模式，Redis 不可用时返回 null）

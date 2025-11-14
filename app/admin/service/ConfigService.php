@@ -251,12 +251,24 @@ class ConfigService extends BaseService
         $index = $this->findDomainMappingIndex($mappings, $domain);
         
         if ($index !== null) {
-            // 更新现有映射
+            // 更新现有映射（保留原有字段，如 preserve_host）
             $mappings[$index] = array_merge($mappings[$index], [
+                'domain' => $domain, // 确保域名也被更新（虽然通常不会改变）
                 'backend' => $backend,
                 'waf_rules' => $data['waf_rules'] ?? [],
                 'enabled' => $data['enabled'] ?? true,
             ]);
+            
+            // 保留 preserve_host 字段（如果存在）
+            if (isset($mappings[$index]['preserve_host'])) {
+                // 如果新数据中有 preserve_host，使用新值；否则保留原值
+                if (isset($data['preserve_host'])) {
+                    $mappings[$index]['preserve_host'] = (bool)($data['preserve_host'] ?? false);
+                }
+            } elseif (isset($data['preserve_host'])) {
+                // 如果原数据中没有，但新数据中有，则添加
+                $mappings[$index]['preserve_host'] = (bool)($data['preserve_host'] ?? false);
+            }
         } else {
             // 添加新映射
             $mappings[] = [
@@ -264,6 +276,7 @@ class ConfigService extends BaseService
                 'backend' => $backend,
                 'waf_rules' => $data['waf_rules'] ?? [],
                 'enabled' => $data['enabled'] ?? true,
+                'preserve_host' => isset($data['preserve_host']) ? (bool)($data['preserve_host'] ?? false) : false,
             ];
         }
         
@@ -545,6 +558,9 @@ class ConfigService extends BaseService
                 $content .= "            'waf_rules' => " . var_export($mapping['waf_rules'], true) . ",\n";
             }
             $content .= "            'enabled' => " . var_export($mapping['enabled'] ?? true, true) . ",\n";
+            if (isset($mapping['preserve_host'])) {
+                $content .= "            'preserve_host' => " . var_export($mapping['preserve_host'], true) . ",\n";
+            }
             $content .= "        ],\n";
         }
         $content .= "    ],\n";

@@ -20,6 +20,9 @@ $ipBlacklistChecked = in_array('ip_blacklist', $wafRules) ? 'checked' : '';
 $currentBackend = $isEdit && $mapping ? ($mapping['backend'] ?? '') : '';
 $isBackendUrl = !empty($currentBackend) && filter_var($currentBackend, FILTER_VALIDATE_URL);
 $backendType = $isBackendUrl ? 'direct' : 'select';
+
+// preserve_host 选项
+$preserveHostChecked = ($isEdit && $mapping && ($mapping['preserve_host'] ?? false)) ? 'checked' : '';
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -73,8 +76,12 @@ $backendType = $isBackendUrl ? 'direct' : 'select';
     <form id="domain-form">
         <div class="form-item">
             <label class="form-label">域名 <span style="color: red;">*</span></label>
-            <input type="text" name="domain" class="form-input" value="<?= $domainValue ?>" placeholder="例如: crm.smm.cn 或 *.api.smm.cn" <?= $isEdit ? 'readonly' : '' ?> required>
-            <div class="form-tip">支持精确域名（如 crm.smm.cn）或通配符域名（如 *.api.smm.cn，通配符必须在开头）</div>
+            <input type="text" name="domain" id="domain_input" class="form-input" value="<?= $domainValue ?>" placeholder="例如: crm.smm.cn 或 *.api.smm.cn" <?= $isEdit ? 'readonly' : '' ?> required>
+            <?php if ($isEdit): ?>
+            <!-- 编辑模式下，使用隐藏字段确保域名字段被提交 -->
+            <input type="hidden" name="domain" value="<?= htmlspecialchars($domainValue) ?>">
+            <?php endif; ?>
+            <div class="form-tip">支持精确域名（如 crm.smm.cn）或通配符域名（如 *.api.smm.cn，通配符必须在开头）<?= $isEdit ? '（编辑模式下域名不可修改）' : '' ?></div>
         </div>
         
         <div class="form-item">
@@ -132,6 +139,15 @@ $backendType = $isBackendUrl ? 'direct' : 'select';
                 </div>
             </div>
             <div class="form-tip">选择要启用的 WAF 保护规则，不选择则使用默认规则</div>
+        </div>
+        
+        <div class="form-item">
+            <label class="form-label">透明代理模式</label>
+            <div class="form-checkbox-item">
+                <input type="checkbox" name="preserve_host" value="1" id="preserve_host" <?= $preserveHostChecked ?>>
+                <label for="preserve_host">保持原始 Host 头（透明代理）</label>
+            </div>
+            <div class="form-tip">启用后，转发请求时会保持原始域名作为 Host 头，而不是使用后端服务的域名</div>
         </div>
         
         <div class="form-item">
@@ -238,6 +254,9 @@ $backendType = $isBackendUrl ? 'direct' : 'select';
             
             // enabled 复选框处理
             data.enabled = document.getElementById("enabled").checked;
+            
+            // preserve_host 复选框处理
+            data.preserve_host = document.getElementById("preserve_host").checked;
             
             // 添加 CSRF Token
             data._token = '<?= htmlspecialchars($csrfToken ?? '') ?>';

@@ -120,7 +120,7 @@ class LogCollector
         
         // 文件处理器
         $fileHandler = new StreamHandler(
-            __DIR__ . '/../../runtime/logs/waf.log',
+            runtime_path('logs/waf.log'),
             Logger::INFO
         );
         $logger->pushHandler($fileHandler);

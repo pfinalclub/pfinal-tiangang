@@ -1,8 +1,8 @@
 <?php
 
-namespace Tiangang\Waf\Plugins\Waf;
+namespace app\waf\plugins;
 
-use Tiangang\Waf\Plugins\WafPluginInterface;
+use app\waf\plugins\WafPluginInterface;
 use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep, run};
 
 /**
@@ -44,27 +44,27 @@ class AdvancedAsyncRule implements WafPluginInterface
         return $this->config['enabled'];
     }
     
-    public function detect(array $requestData): \Generator
+    public function detect(array $requestData): array
     {
         // 使用 pfinal-asyncio 进行异步检测
-        return yield $this->asyncDetection($requestData);
+        return $this->asyncDetection($requestData);
     }
     
     /**
      * 异步检测主逻辑
      */
-    private function asyncDetection(array $requestData): \Generator
+    private function asyncDetection(array $requestData): array
     {
         // 创建多个并发检测任务
         $tasks = [
-            create_task($this->checkMaliciousPatterns($requestData)),
-            create_task($this->checkBehavioralPatterns($requestData)),
-            create_task($this->checkNetworkPatterns($requestData)),
+            create_task(fn() => $this->checkMaliciousPatterns($requestData)),
+            create_task(fn() => $this->checkBehavioralPatterns($requestData)),
+            create_task(fn() => $this->checkNetworkPatterns($requestData)),
         ];
         
         try {
             // 并发执行所有检测任务，带超时控制
-            $results = yield wait_for(gather(...$tasks), $this->config['timeout']);
+            $results = wait_for(fn() => gather(...$tasks), $this->config['timeout']);
             
             // 分析结果
             return $this->analyzeResults($results);
@@ -82,10 +82,10 @@ class AdvancedAsyncRule implements WafPluginInterface
     /**
      * 检测恶意模式
      */
-    private function checkMaliciousPatterns(array $requestData): \Generator
+    private function checkMaliciousPatterns(array $requestData): array
     {
         // 模拟异步 I/O 操作（如数据库查询、API 调用等）
-        yield sleep(0.1); // 模拟 100ms 的 I/O 操作
+        sleep(0.1); // 模拟 100ms 的 I/O 操作
         
         $content = json_encode($requestData);
         $patterns = [
@@ -113,10 +113,10 @@ class AdvancedAsyncRule implements WafPluginInterface
     /**
      * 检测行为模式
      */
-    private function checkBehavioralPatterns(array $requestData): \Generator
+    private function checkBehavioralPatterns(array $requestData): array
     {
         // 模拟异步行为分析
-        yield sleep(0.2); // 模拟 200ms 的行为分析
+        sleep(0.2); // 模拟 200ms 的行为分析
         
         $userAgent = $requestData['user_agent'] ?? '';
         $referer = $requestData['referer'] ?? '';
@@ -147,10 +147,10 @@ class AdvancedAsyncRule implements WafPluginInterface
     /**
      * 检测网络模式
      */
-    private function checkNetworkPatterns(array $requestData): \Generator
+    private function checkNetworkPatterns(array $requestData): array
     {
         // 模拟异步网络分析
-        yield sleep(0.15); // 模拟 150ms 的网络分析
+        sleep(0.15); // 模拟 150ms 的网络分析
         
         $ip = $requestData['ip'] ?? '';
         $headers = $requestData['headers'] ?? [];
@@ -299,5 +299,17 @@ class AdvancedAsyncRule implements WafPluginInterface
     public function getConfig(): array
     {
         return $this->config;
+    }
+    
+    public function supportsQuickDetection(): bool
+    {
+        // 高级异步检测不适合快速检测（需要异步操作）
+        return false;
+    }
+    
+    public function requiresLicense(): bool
+    {
+        // 高级异步检测需要付费许可证
+        return true;
     }
 }

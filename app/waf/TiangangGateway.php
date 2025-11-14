@@ -4,8 +4,9 @@ namespace app\waf;
 
 use Workerman\Protocols\Http\Request;
 use Workerman\Protocols\Http\Response;
-use app\waf\middleware\WafMiddleware;
 use app\waf\config\ConfigManager;
+use app\waf\plugins\PluginManager;
+use app\waf\middleware\WafMiddleware;
 use app\waf\logging\LogCollector;
 use app\waf\proxy\ProxyHandler;
 use app\waf\proxy\BackendManager;
@@ -22,6 +23,7 @@ use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep};
 class TiangangGateway
 {
     private ConfigManager $configManager;
+    private PluginManager $pluginManager;
     private WafMiddleware $wafMiddleware;
     private LogCollector $logCollector;
     private ProxyHandler $proxyHandler;
@@ -34,7 +36,8 @@ class TiangangGateway
     public function __construct()
     {
         $this->configManager = new ConfigManager();
-        $this->wafMiddleware = new WafMiddleware();
+        $this->pluginManager = new PluginManager();
+        $this->wafMiddleware = new WafMiddleware($this->configManager, $this->pluginManager);
         $this->logCollector = new LogCollector();
         $this->proxyHandler = new ProxyHandler();
         $this->backendManager = new BackendManager();
@@ -46,6 +49,8 @@ class TiangangGateway
     
     /**
      * 混合模式处理 HTTP 请求（核心同步 + 后台异步）
+     * 
+     * @deprecated 使用 handleAdminRequest 或 handleProxyRequest 替代
      */
     public function handle(Request $request): Response
     {
@@ -62,6 +67,104 @@ class TiangangGateway
                 });
             }
             
+            // 检查 WAF 是否启用
+            if (!($this->config['enabled'] ?? true)) {
+                return $this->createPassThroughResponse($request);
+            }
+            
+            // 同步 WAF 检测（核心功能，必须同步）
+            $wafResult = $this->wafMiddleware->processSync($request);
+            
+            if ($wafResult->isBlocked()) {
+                // 异步记录安全日志（后台任务）
+                $this->queueAsyncLog($request, $wafResult, microtime(true) - $startTime);
+                return $this->createBlockResponse($wafResult, $request);
+            }
+            
+            // 同步代理转发（核心功能，必须同步）
+            $response = $this->proxyHandler->forwardSync($request);
+            
+            // 确保响应是有效的 Response 对象
+            if (!($response instanceof Response)) {
+                throw new \RuntimeException('Invalid response from proxy handler');
+            }
+            
+            // 异步记录成功日志（后台任务）
+            $this->queueAsyncLog($request, $wafResult, microtime(true) - $startTime);
+            
+            return $response;
+            
+        } catch (\Throwable $e) {
+            // 捕获所有类型的错误（包括 Error 和 Exception）
+            // 异步记录错误日志（后台任务）
+            $this->queueAsyncErrorLog($request, $e);
+            
+            // 返回错误响应
+            return $this->createErrorResponse($e);
+        }
+    }
+    
+    /**
+     * 处理管理界面请求（8989 端口）
+     */
+    public function handleAdminRequest(Request $request): Response
+    {
+        try {
+            // 调试日志：确认这是管理界面请求
+            if (function_exists('logger')) {
+                logger('info', "handleAdminRequest: Processing admin request", [
+                    'path' => $request->path(),
+                    'host' => $request->header('Host'),
+                    'method' => $request->method()
+                ]);
+            }
+            
+            // 对管理界面请求应用认证中间件和 CSRF 保护
+            $response = $this->authMiddleware->process($request, function($request) {
+                return $this->csrfMiddleware->process($request, function($request) {
+                    return $this->adminRoutes->handleRequest($request);
+                });
+            });
+            
+            // 调试日志：确认返回的是管理界面响应
+            if (function_exists('logger')) {
+                logger('info', "handleAdminRequest: Admin response generated", [
+                    'path' => $request->path(),
+                    'status_code' => $response->getStatusCode()
+                ]);
+            }
+            
+            return $response;
+        } catch (\Throwable $e) {
+            if (function_exists('logger')) {
+                logger('error', "handleAdminRequest: Error processing admin request", [
+                    'path' => $request->path(),
+                    'error' => $e->getMessage()
+                ]);
+            }
+            $this->queueAsyncErrorLog($request, $e);
+            return $this->createErrorResponse($e);
+        }
+    }
+    
+    /**
+     * 处理 WAF 代理请求（8787 端口）
+     */
+    public function handleProxyRequest(Request $request): Response
+    {
+        $startTime = microtime(true);
+        
+        // 调试日志：记录所有代理请求
+        if (function_exists('logger')) {
+            logger('info', "handleProxyRequest: Processing proxy request", [
+                'path' => $request->path(),
+                'host' => $request->header('Host'),
+                'method' => $request->method(),
+                'remote_addr' => $request->header('X-Real-IP') ?: $request->header('X-Forwarded-For') ?: 'unknown'
+            ]);
+        }
+        
+        try {
             // 检查 WAF 是否启用
             if (!($this->config['enabled'] ?? true)) {
                 return $this->createPassThroughResponse($request);
@@ -143,17 +246,17 @@ class TiangangGateway
     /**
      * 异步记录日志
      */
-    private function asyncLog(Request $request, \app\waf\core\WafResult $wafResult, float $duration): \Generator
+    private function asyncLog(Request $request, \app\waf\core\WafResult $wafResult, float $duration): void
     {
-        yield $this->logCollector->log($request, $wafResult, $duration);
+        $this->logCollector->log($request, $wafResult, $duration);
     }
     
     /**
      * 异步记录错误日志
      */
-    private function asyncErrorLog(Request $request, \Throwable $e): \Generator
+    private function asyncErrorLog(Request $request, \Throwable $e): void
     {
-        yield $this->logCollector->logError($request, $e);
+        $this->logCollector->logError($request, $e);
     }
 
     
@@ -161,25 +264,25 @@ class TiangangGateway
     /**
      * 异步代理请求到后端
      */
-    private function asyncProxyRequest(Request $request): \Generator
+    private function asyncProxyRequest(Request $request): Response
     {
         try {
             // 异步获取可用的后端
-            $backend = yield create_task($this->asyncGetBackend());
+            $backend = create_task(fn() => $this->asyncGetBackend());
             if (!$backend) {
                 return $this->createServiceUnavailableResponse();
             }
             
             // 异步增加连接计数
-            create_task($this->asyncIncrementConnections($backend['name']));
+            create_task(fn() => $this->asyncIncrementConnections($backend['name']));
             
             try {
                 // 异步转发请求
-                $response = yield create_task($this->proxyHandler->forward($request));
+                $response = create_task(fn() => $this->proxyHandler->forward($request));
                 return $response;
             } finally {
                 // 异步减少连接计数
-                create_task($this->asyncDecrementConnections($backend['name']));
+                create_task(fn() => $this->asyncDecrementConnections($backend['name']));
             }
             
         } catch (\Exception $e) {
@@ -196,10 +299,10 @@ class TiangangGateway
     /**
      * 异步获取后端
      */
-    private function asyncGetBackend(): \Generator
+    private function asyncGetBackend(): ?array
     {
         // 模拟异步后端选择
-        yield sleep(0.001);
+        sleep(0.001);
         
         return $this->backendManager->getAvailableBackend();
     }
@@ -207,10 +310,10 @@ class TiangangGateway
     /**
      * 异步增加连接计数
      */
-    private function asyncIncrementConnections(string $backendName): \Generator
+    private function asyncIncrementConnections(string $backendName): void
     {
         // 模拟异步连接计数
-        yield sleep(0.001);
+        sleep(0.001);
         
         $this->backendManager->incrementConnections($backendName);
     }
@@ -218,10 +321,10 @@ class TiangangGateway
     /**
      * 异步减少连接计数
      */
-    private function asyncDecrementConnections(string $backendName): \Generator
+    private function asyncDecrementConnections(string $backendName): void
     {
         // 模拟异步连接计数
-        yield sleep(0.001);
+        sleep(0.001);
         
         $this->backendManager->decrementConnections($backendName);
     }
@@ -229,10 +332,10 @@ class TiangangGateway
     /**
      * 异步记录请求日志
      */
-    private function asyncLogRequest(Request $request, \app\waf\core\WafResult $wafResult, float $duration): \Generator
+    private function asyncLogRequest(Request $request, \app\waf\core\WafResult $wafResult, float $duration): void
     {
         // 模拟异步日志记录
-        yield sleep(0.001);
+        sleep(0.001);
         
         $this->logCollector->log($request, $wafResult, $duration);
     }
@@ -240,10 +343,10 @@ class TiangangGateway
     /**
      * 异步记录错误日志
      */
-    private function asyncLogError(Request $request, \Exception $e): \Generator
+    private function asyncLogError(Request $request, \Exception $e): void
     {
         // 模拟异步错误日志记录
-        yield sleep(0.001);
+        sleep(0.001);
         
         $this->logCollector->logError($request, $e);
     }
@@ -419,7 +522,7 @@ HTML;
     {
         // Workerman 本身就是异步事件驱动的，直接执行异步任务
         // 不需要 fastcgi_finish_request()（那是 FastCGI 专用的）
-        \PfinalClub\Asyncio\run($this->asyncLog($request, $wafResult, $duration));
+        \PfinalClub\Asyncio\run(fn() => $this->asyncLog($request, $wafResult, $duration));
     }
     
     /**
@@ -433,7 +536,7 @@ HTML;
     {
         // Workerman 本身就是异步事件驱动的，直接执行异步任务
         // 不需要 fastcgi_finish_request()（那是 FastCGI 专用的）
-        \PfinalClub\Asyncio\run($this->asyncErrorLog($request, $e));
+        \PfinalClub\Asyncio\run(fn() => $this->asyncErrorLog($request, $e));
     }
     
     /**

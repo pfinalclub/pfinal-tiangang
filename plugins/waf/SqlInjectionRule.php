@@ -1,8 +1,8 @@
 <?php
 
-namespace Tiangang\Waf\Plugins\Waf;
+namespace app\waf\plugins;
 
-use Tiangang\Waf\Plugins\WafPluginInterface;
+use app\waf\plugins\WafPluginInterface;
 
 /**
  * SQL 注入检测规则插件
@@ -123,6 +123,18 @@ class SqlInjectionRule implements WafPluginInterface
     public function getConfig(): array
     {
         return $this->config;
+    }
+    
+    public function supportsQuickDetection(): bool
+    {
+        // SQL注入检测适合快速检测（正则匹配）
+        return true;
+    }
+    
+    public function requiresLicense(): bool
+    {
+        // 基础SQL注入检测免费
+        return false;
     }
     
     /**

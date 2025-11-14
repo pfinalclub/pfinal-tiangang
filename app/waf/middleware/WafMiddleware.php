@@ -8,6 +8,7 @@ use app\waf\detectors\AsyncDetector;
 use app\waf\core\DecisionEngine;
 use app\waf\core\WafResult;
 use app\waf\config\ConfigManager;
+use app\waf\plugins\PluginManager;
 use PfinalClub\Asyncio\{create_task, gather, wait_for, sleep};
 
 /**
@@ -21,15 +22,17 @@ class WafMiddleware
     private QuickDetector $quickDetector;
     private AsyncDetector $asyncDetector;
     private DecisionEngine $decisionEngine;
+    private PluginManager $pluginManager;
     private ?array $config;
     
-    public function __construct()
+    public function __construct(ConfigManager $configManager, PluginManager $pluginManager)
     {
-        $this->configManager = new ConfigManager();
-        $this->quickDetector = new QuickDetector();
-        $this->asyncDetector = new AsyncDetector();
-        $this->decisionEngine = new DecisionEngine();
-        $this->config = $this->configManager->get('waf') ?? [];
+        $this->configManager = $configManager;
+        $this->pluginManager = $pluginManager;
+        $this->config = $configManager->get('waf') ?? [];
+        $this->quickDetector = new QuickDetector($configManager, $pluginManager);
+        $this->asyncDetector = new AsyncDetector($configManager, $pluginManager);
+        $this->decisionEngine = new DecisionEngine($configManager);
     }
     
     /**
@@ -40,11 +43,11 @@ class WafMiddleware
         // 提取请求数据
         $requestData = $this->extractRequestData($request);
         
-        // 获取当前请求的域名映射配置，确定启用的 WAF 规则
-        $enabledRules = $this->getEnabledRulesForRequest($request);
+        // 获取当前请求启用的 WAF 插件
+        $enabledPlugins = $this->getEnabledPluginsForRequest($request);
 
-        // 快速检测（同步），传入启用的规则列表
-        $quickResult = $this->quickDetector->check($requestData, $enabledRules);
+        // 快速检测（同步），传入启用的插件列表
+        $quickResult = $this->quickDetector->check($requestData, $enabledPlugins);
         if ($quickResult->isBlocked()) {
             return $quickResult;
         }
@@ -62,16 +65,19 @@ class WafMiddleware
     /**
      * 异步处理请求（保留用于后台任务）
      */
-    public function process(Request $request): \Generator
+    public function process(Request $request): WafResult
     {
         // 提取请求数据
         $requestData = $this->extractRequestData($request);
+        
+        // 获取当前请求启用的 WAF 插件
+        $enabledPlugins = $this->getEnabledPluginsForRequest($request);
 
         // 并发执行快速检测和异步检测
-        $results = yield \PfinalClub\Asyncio\gather([
-            $this->quickDetector->checkAsync($requestData),
+        $results = \PfinalClub\Asyncio\gather(
+            $this->quickDetector->checkAsync($requestData, $enabledPlugins),
             $this->asyncDetector->check($requestData)
-        ]);
+        );
 
         // 检查快速检测结果
         $quickResult = $results[0];
@@ -90,12 +96,12 @@ class WafMiddleware
     }
 
     /**
-     * 获取当前请求启用的 WAF 规则列表
+     * 获取当前请求启用的 WAF 插件
      * 
-     * 根据域名映射配置中的 waf_rules 来确定启用的规则
-     * 如果没有找到域名映射或未配置 waf_rules，使用全局配置
+     * 根据域名映射配置中的 waf_plugins 来确定启用的插件
+     * 如果没有找到域名映射或未配置 waf_plugins，使用插件管理器获取所有已启用的授权插件
      */
-    private function getEnabledRulesForRequest(Request $request): array
+    private function getEnabledPluginsForRequest(Request $request): array
     {
         try {
             // 获取域名映射配置
@@ -136,13 +142,13 @@ class WafMiddleware
                     }
                     
                     if ($matched) {
-                        // 找到匹配的域名映射，返回配置的 waf_rules
-                        $wafRules = $mapping['waf_rules'] ?? [];
-                        if (is_array($wafRules) && !empty($wafRules)) {
-                            return $wafRules;
+                        // 找到匹配的域名映射，返回配置的 waf_plugins
+                        $wafPlugins = $mapping['waf_plugins'] ?? [];
+                        if (is_array($wafPlugins) && !empty($wafPlugins)) {
+                            return $wafPlugins;
                         }
-                        // 如果配置了但为空数组，表示不启用任何规则
-                        if (is_array($wafRules)) {
+                        // 如果配置了但为空数组，表示不启用任何插件
+                        if (is_array($wafPlugins)) {
                             return [];
                         }
                     }
@@ -165,22 +171,34 @@ class WafMiddleware
                 
                 // 精确匹配或前缀匹配
                 if ($path === $mappingPath || str_starts_with($path, rtrim($mappingPath, '/') . '/')) {
-                    $wafRules = $mapping['waf_rules'] ?? [];
-                    if (is_array($wafRules) && !empty($wafRules)) {
-                        return $wafRules;
+                    $wafPlugins = $mapping['waf_plugins'] ?? [];
+                    if (is_array($wafPlugins) && !empty($wafPlugins)) {
+                        return $wafPlugins;
                     }
-                    if (is_array($wafRules)) {
+                    if (is_array($wafPlugins)) {
                         return [];
                     }
                 }
             }
         } catch (\Exception $e) {
             // 配置加载失败，记录错误但继续使用全局配置
-            error_log('Failed to get enabled rules for request: ' . $e->getMessage());
+            error_log('Failed to get enabled plugins for request: ' . $e->getMessage());
         }
         
-        // 没有找到匹配的映射，使用全局配置
-        return $this->config['rules']['enabled'] ?? ['sql_injection', 'xss', 'rate_limit', 'ip_blacklist'];
+        // 没有找到匹配的映射，使用插件管理器获取所有已启用的授权插件
+        $enabledPlugins = $this->pluginManager->getEnabledPlugins();
+        $authorizedPlugins = $this->pluginManager->getAuthorizedPlugins();
+        
+        // 返回已启用且已授权的插件类名列表
+        $result = [];
+        foreach ($enabledPlugins as $plugin) {
+            $pluginClass = get_class($plugin);
+            if (in_array($pluginClass, $authorizedPlugins)) {
+                $result[] = $pluginClass;
+            }
+        }
+        
+        return $result;
     }
 
     /**
@@ -205,10 +223,10 @@ class WafMiddleware
     /**
      * 异步提取请求数据
      */
-    private function asyncExtractRequestData(Request $request): \Generator
+    private function asyncExtractRequestData(Request $request): array
     {
         // 模拟异步数据提取过程
-        yield sleep(0.001);
+        \PfinalClub\Asyncio\sleep(0.001);
         
         return [
             'ip' => $this->getRealIp($request),
@@ -227,17 +245,12 @@ class WafMiddleware
     /**
      * 异步快速检测
      */
-    private function asyncQuickDetect(array $requestData): \Generator
+    private function asyncQuickDetect(array $requestData): WafResult
     {
         // 模拟异步快速检测
-        yield sleep(0.005);
+        \PfinalClub\Asyncio\sleep(0.005);
         
         $result = $this->quickDetector->check($requestData);
-        
-        // 如果是 Generator，运行它
-        if ($result instanceof \Generator) {
-            $result = yield $result;
-        }
         
         return $result;
     }
@@ -245,17 +258,12 @@ class WafMiddleware
     /**
      * 异步深度检测
      */
-    private function asyncDetect(array $requestData): \Generator
+    private function asyncDetect(array $requestData): array
     {
         // 模拟异步深度检测
-        yield sleep(0.01);
+        \PfinalClub\Asyncio\sleep(0.01);
         
         $results = $this->asyncDetector->check($requestData);
-        
-        // 如果是 Generator，运行它
-        if ($results instanceof \Generator) {
-            $results = yield $results;
-        }
         
         return $results;
     }

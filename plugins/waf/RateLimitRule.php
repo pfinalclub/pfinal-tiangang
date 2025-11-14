@@ -1,8 +1,8 @@
 <?php
 
-namespace Tiangang\Waf\Plugins\Waf;
+namespace app\waf\plugins;
 
-use Tiangang\Waf\Plugins\WafPluginInterface;
+use app\waf\plugins\WafPluginInterface;
 use Predis\Client as RedisClient;
 
 /**
@@ -116,6 +116,18 @@ class RateLimitRule implements WafPluginInterface
     public function getConfig(): array
     {
         return $this->config;
+    }
+    
+    public function supportsQuickDetection(): bool
+    {
+        // 频率限制适合快速检测（同步操作）
+        return true;
+    }
+    
+    public function requiresLicense(): bool
+    {
+        // 高级频率限制功能需要付费许可证
+        return true;
     }
     
     /**

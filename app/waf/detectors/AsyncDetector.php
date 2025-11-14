@@ -17,10 +17,10 @@ class AsyncDetector
     private ConfigManager $configManager;
     private ?array $config;
     
-    public function __construct()
+    public function __construct(ConfigManager $configManager, PluginManager $pluginManager)
     {
-        $this->pluginManager = new PluginManager();
-        $this->configManager = new ConfigManager();
+        $this->configManager = $configManager;
+        $this->pluginManager = $pluginManager;
         $this->config = $this->configManager->get('waf') ?? [];
     }
     
@@ -42,11 +42,6 @@ class AsyncDetector
             try {
                 $result = $plugin->detect($requestData);
                 
-                // 如果是 Generator，运行它
-                if ($result instanceof \Generator) {
-                    $result = \PfinalClub\Asyncio\run($result);
-                }
-                
                 $results[] = [
                     'matched' => $result['matched'] ?? false,
                     'rule' => $result['rule'] ?? 'unknown',
@@ -65,7 +60,7 @@ class AsyncDetector
     /**
      * 异步检测
      */
-    public function check(array $requestData): \Generator
+    public function check(array $requestData): array
     {
         // 加载启用的插件
         $enabledPlugins = $this->getEnabledPlugins();
@@ -77,10 +72,12 @@ class AsyncDetector
         // 并发执行所有插件检测
         $tasks = [];
         foreach ($enabledPlugins as $plugin) {
-            $tasks[] = $this->runPluginAsync($plugin, $requestData);
+            $tasks[] = \PfinalClub\Asyncio\create_task(
+                fn() => $this->runPluginAsync($plugin, $requestData)
+            );
         }
         
-        $results = yield \PfinalClub\Asyncio\gather($tasks);
+        $results = \PfinalClub\Asyncio\gather(...$tasks);
         
         // 过滤有效结果
         $validResults = array_filter($results, function($result) {
@@ -93,17 +90,12 @@ class AsyncDetector
     /**
      * 异步运行单个插件
      */
-    private function runPluginAsync($plugin, array $requestData): \Generator
+    private function runPluginAsync($plugin, array $requestData): array
     {
         try {
-            yield \PfinalClub\Asyncio\sleep(0.001); // 模拟异步处理
+            \PfinalClub\Asyncio\sleep(0.001); // 模拟异步处理
             
             $result = $plugin->detect($requestData);
-            
-            // 如果是 Generator，运行它
-            if ($result instanceof \Generator) {
-                $result = yield $result;
-            }
             
             return [
                 'plugin' => $plugin->getName(),
@@ -123,10 +115,10 @@ class AsyncDetector
     /**
      * 运行单个插件（保留兼容性）
      */
-    private function runPlugin($plugin, array $requestData): \Generator
+    private function runPlugin($plugin, array $requestData): array
     {
         try {
-            $result = yield $plugin->detect($requestData);
+            $result = $plugin->detect($requestData);
             return [
                 'plugin' => $plugin->getName(),
                 'result' => $result,
@@ -147,11 +139,19 @@ class AsyncDetector
      */
     private function getEnabledPlugins(): array
     {
-        $enabledRules = $this->config['rules']['enabled'] ?? [];
+        // 从插件管理器获取已启用且已授权的插件
+        $enabledPlugins = $this->pluginManager->getEnabledPlugins();
+        $authorizedPlugins = $this->pluginManager->getAuthorizedPlugins();
+        
+        // 获取已启用且已授权的插件交集（基于插件名称）
+        $enabledPluginNames = array_keys($enabledPlugins);
+        $authorizedPluginNames = array_keys($authorizedPlugins);
+        $availablePluginNames = array_intersect($enabledPluginNames, $authorizedPluginNames);
+        
         $plugins = [];
         
-        foreach ($enabledRules as $ruleName) {
-            $plugin = $this->pluginManager->getPlugin($ruleName);
+        foreach ($availablePluginNames as $pluginName) {
+            $plugin = $this->pluginManager->getPlugin($pluginName);
             if ($plugin && $plugin->isEnabled()) {
                 $plugins[] = $plugin;
             }

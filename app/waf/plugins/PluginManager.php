@@ -3,22 +3,30 @@
 namespace app\waf\plugins;
 
 use app\waf\config\ConfigManager;
+use app\license\manager\PluginLicenseManager;
 
 /**
  * 插件管理器
  * 
- * 负责插件的加载、管理和调度
+ * 负责插件的加载、管理和调度，支持许可证检查
  */
 class PluginManager
 {
     private array $plugins = [];
+    private array $pluginInfo = [];
     private ConfigManager $configManager;
+    private PluginLicenseManager $licenseManager;
     private string $pluginPath;
     
     public function __construct()
     {
         $this->configManager = new ConfigManager();
-        $this->pluginPath = __DIR__ . '/../../plugins/waf';
+        $this->licenseManager = new PluginLicenseManager(
+            new \app\license\validator\LicenseValidator($this->configManager),
+            $this,
+            $this->configManager
+        );
+        $this->pluginPath = base_path('plugins/waf');
         $this->loadPlugins();
     }
     
@@ -105,7 +113,29 @@ class PluginManager
                 $plugin = new $className();
                 
                 if ($plugin instanceof WafPluginInterface) {
-                    $this->plugins[$plugin->getName()] = $plugin;
+                    $pluginName = $plugin->getName();
+                    
+                    // 检查插件是否需要许可证
+                    $requiresLicense = $plugin->requiresLicense();
+                    
+                    // 检查插件许可证（传入 requiresLicense 参数避免循环依赖）
+                    $licenseResult = $this->licenseManager->validatePluginLicense($pluginName, null, $requiresLicense);
+                    
+                    // 存储插件信息
+                    $this->pluginInfo[$pluginName] = [
+                        'class' => $className,
+                        'file' => basename($realPluginFile),
+                        'requires_license' => $requiresLicense,
+                        'license_valid' => $licenseResult['valid'],
+                        'license_message' => $licenseResult['message']
+                    ];
+                    
+                    // 只有许可证有效的插件才被加载（免费插件默认有效）
+                    if ($licenseResult['valid']) {
+                        $this->plugins[$pluginName] = $plugin;
+                    } else {
+                        error_log("Plugin {$pluginName} license invalid: " . $licenseResult['message']);
+                    }
                 }
             }
         } catch (\Exception $e) {
@@ -219,5 +249,71 @@ class PluginManager
             return true;
         }
         return false;
+    }
+    
+    /**
+     * 获取插件信息
+     */
+    public function getPluginInfo(string $name): ?array
+    {
+        return $this->pluginInfo[$name] ?? null;
+    }
+    
+    /**
+     * 获取所有插件信息
+     */
+    public function getAllPluginInfo(): array
+    {
+        return $this->pluginInfo;
+    }
+    
+    /**
+     * 检查插件是否已授权
+     */
+    public function isPluginAuthorized(string $name): bool
+    {
+        return $this->licenseManager->isPluginAuthorized($name);
+    }
+    
+    /**
+     * 验证插件许可证
+     */
+    public function validatePluginLicense(string $name, ?string $licenseKey = null): array
+    {
+        return $this->licenseManager->validatePluginLicense($name, $licenseKey);
+    }
+    
+    /**
+     * 获取许可证管理器
+     */
+    public function getLicenseManager(): PluginLicenseManager
+    {
+        return $this->licenseManager;
+    }
+    
+    /**
+     * 获取已授权的插件列表
+     */
+    public function getAuthorizedPlugins(): array
+    {
+        return array_filter($this->plugins, function ($plugin) {
+            return $this->isPluginAuthorized($plugin->getName());
+        });
+    }
+    
+    /**
+     * 获取需要许可证但未授权的插件列表
+     */
+    public function getUnauthorizedPlugins(): array
+    {
+        $unauthorized = [];
+        
+        foreach ($this->pluginInfo as $pluginName => $info) {
+            if ($info['requires_license'] && !$info['license_valid']) {
+                $unauthorized[$pluginName] = $info;
+            }
+        }
+        
+        return $unauthorized;
     }
 }

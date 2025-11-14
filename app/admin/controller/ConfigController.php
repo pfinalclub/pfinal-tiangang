@@ -87,7 +87,7 @@ class ConfigController extends BaseController
         }
         
         try {
-            $name = $request->get('name');
+            $name = $request->post('name');
             if (empty($name)) {
                 return $this->error('Name parameter is required', 400);
             }
@@ -152,7 +152,7 @@ class ConfigController extends BaseController
         }
         
         try {
-            $domain = $request->get('domain');
+            $domain = $request->post('domain');
             if (empty($domain)) {
                 return $this->error('Domain parameter is required', 400);
             }
@@ -211,7 +211,7 @@ class ConfigController extends BaseController
         }
         
         try {
-            $path = $request->get('path');
+            $path = $request->post('path');
             if (empty($path)) {
                 return $this->error('Path parameter is required', 400);
             }

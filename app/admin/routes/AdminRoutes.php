@@ -39,6 +39,19 @@ class AdminRoutes
      */
     private function dispatch(Request $request, string $path): Response
     {
+        // 处理静态资源请求（返回 404，不触发代理）
+        $staticPaths = [
+            '/favicon.ico',
+            '/robots.txt',
+            '/.well-known',
+        ];
+        
+        foreach ($staticPaths as $staticPath) {
+            if ($path === $staticPath || str_starts_with($path, $staticPath . '/')) {
+                return $this->handleNotFound($request);
+            }
+        }
+        
         // 合并路由
         $routes = array_merge($this->webRoutes, $this->apiRoutes);
         

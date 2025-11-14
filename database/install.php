@@ -119,6 +119,16 @@ function main(): void
         exit(1);
     }
     
+    // 执行迁移文件
+    $migrationFiles = glob(__DIR__ . '/migrations/*.sql');
+    sort($migrationFiles); // 按文件名排序
+    
+    foreach ($migrationFiles as $migrationFile) {
+        if (!executeSqlFile($pdo, $migrationFile)) {
+            exit(1);
+        }
+    }
+    
     echo "\n========================================\n";
     echo "  安装完成！\n";
     echo "========================================\n\n";

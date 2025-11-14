@@ -1,352 +1,151 @@
-[2025-10-17 01:25:17] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:25:17] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:25:17] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:25:17] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:25:38] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:25:38] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:25:38] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:25:38] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:32] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:32] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:32] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:32] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:45] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:45] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:45] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:45] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:58] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:58] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:58] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:26:58] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:28:26] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:28:26] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:28:26] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:28:26] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:00] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:00] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:00] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:00] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:10] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:10] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:10] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:10] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:43] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:43] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:43] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:29:43] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:30:57] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:30:57] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:30:57] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:30:57] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:31:59] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:31:59] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:31:59] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:31:59] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:32:24] warning: Failed to cache rule to Redis: ip_blacklist {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:32:24] warning: Failed to cache rule to Redis: rate_limit {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:32:24] warning: Failed to cache rule to Redis: sql_injection {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-10-17 01:32:24] warning: Failed to cache rule to Redis: xss {"error":"Connection refused [tcp:\/\/127.0.0.1:6379]"}
-[2025-11-07 06:51:48] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 06:59:21] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 06:59:44] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:00:05] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:03:18] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:03:32] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:04:18] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:04:56] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:09:52] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:14:53] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:15:02] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:15:07] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:15:09] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:15:20] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:15:28] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:15:53] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:16:05] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:16:33] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:16:37] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":243,"trace":null}
-[2025-11-07 07:59:37] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 07:59:40] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:03:27] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:03:31] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:31] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:32] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:33] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:36] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:37] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:39] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:47] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:49] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:53] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:56] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:57] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:04:58] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:07:46] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:08:12] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:59:00] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:59:02] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:59:04] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:59:06] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:59:07] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:59:09] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:59:19] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:59:26] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 08:59:29] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:00:18] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:10:34] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin\/dashboard","exception":null,"trace":null}
-[2025-11-07 09:10:34] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:10:38] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin\/","exception":null,"trace":null}
-[2025-11-07 09:10:38] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:10:44] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:10:44] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:10:47] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:10:47] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:10:48] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:10:48] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:10:49] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:10:49] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:10:49] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:10:49] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:10:54] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:10:55] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:10:55] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:11:09] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin\/","exception":null,"trace":null}
-[2025-11-07 09:11:09] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:11:12] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:11:12] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:11:14] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:11:14] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:11:16] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:11:16] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:11:24] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin\/dashboard","exception":null,"trace":null}
-[2025-11-07 09:11:24] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:11:32] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin\/dashboard","exception":null,"trace":null}
-[2025-11-07 09:11:32] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:11:36] error: Method not found: app\admin\controller\DashboardController::health {"path":"\/health","exception":null,"trace":null}
-[2025-11-07 09:11:36] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:12:10] error: Method not found: app\admin\controller\DashboardController::getData {"path":"\/api\/dashboard","exception":null,"trace":null}
-[2025-11-07 09:12:10] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:38:43] error: Method not found: app\admin\controller\DashboardController::getData {"path":"\/api\/dashboard","exception":null,"trace":null}
-[2025-11-07 09:38:43] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:38:49] error: Method not found: app\admin\controller\DashboardController::index {"path":"\/admin","exception":null,"trace":null}
-[2025-11-07 09:38:49] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:55:55] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 09:56:02] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:09:49] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:09:54] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:10:04] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:10:05] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:10:05] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:10:06] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:10:06] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:10:07] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:10:09] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:10:58] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:01] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:03] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:04] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:07] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:08] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:09] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:11] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:15] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:24] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:26] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:27] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:15:31] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:16:14] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:16:45] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:16:45] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:16:46] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:16:46] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:16:50] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:16] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:18] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:19] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:20] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:23] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:24] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:25] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:26] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:28] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:17:29] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:18:16] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:18:24] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:18:45] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:18:45] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:18:46] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:18:49] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:18:50] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:18:53] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:19:25] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:19:26] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:19:27] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:19:28] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:19:29] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:19:30] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:19:31] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:19:52] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:20:52] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:20:54] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:20:56] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:20:58] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:21:06] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:21:55] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:21:57] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:02] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:03] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:04] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:05] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:06] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:07] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:08] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:10] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:12] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:22:13] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:23:24] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:23:25] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:23:26] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:16] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:19] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:20] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:21] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:23] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:24] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:26] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:27] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:27] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:29] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:37] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:25:39] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:26:23] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:26:27] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:26:54] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:27:52] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:27:53] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:28:03] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:28:03] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:31:03] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:31:03] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:31:49] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:31:50] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:32:14] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:32:15] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:53:28] error: Unexpected proxy error {"url":"\/","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:53:31] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:53:31] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"SSRF attempt detected: Private IP address not allowed","file":"\/Users\/pfinal\/www\/tiangang\/app\/waf\/proxy\/ProxyHandler.php","line":236,"trace":null}
-[2025-11-07 10:59:38] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"34.92ms","size":1}
-[2025-11-07 11:00:29] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"23.38ms","size":1}
-[2025-11-07 11:02:12] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"50.25ms","size":1}
-[2025-11-07 11:02:16] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"22.51ms","size":1}
-[2025-11-07 11:03:01] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"105.77ms","size":1}
-[2025-11-07 11:03:01] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"50.64ms","size":6446}
-[2025-11-07 11:03:01] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"25.7ms","size":1}
-[2025-11-07 11:03:02] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"69.16ms","size":6446}
-[2025-11-07 11:06:29] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"59.79ms","size":1}
-[2025-11-07 11:06:30] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"40.12ms","size":6446}
-[2025-11-07 11:06:30] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"17.61ms","size":1}
-[2025-11-07 11:06:30] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"50.69ms","size":6446}
-[2025-11-07 11:08:28] info: Proxy performance {"url":"\/","method":"GET","status_code":302,"duration":"23.95ms","size":1}
-[2025-11-07 11:08:40] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"394.52ms","size":111386}
-[2025-11-07 11:08:41] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"556.6ms","size":111386}
-[2025-11-07 11:08:41] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"233.03ms","size":50}
-[2025-11-07 11:08:41] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"340.07ms","size":533}
-[2025-11-07 11:08:41] info: Proxy performance {"url":"\/index.php","method":"POST","status_code":200,"duration":"281.75ms","size":40}
-[2025-11-07 11:08:41] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"73.62ms","size":830}
-[2025-11-07 11:08:46] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"21.05ms","size":1}
-[2025-11-07 11:08:46] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"29.18ms","size":6446}
-[2025-11-07 11:08:46] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"55.29ms","size":1}
-[2025-11-07 11:08:46] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"28.51ms","size":6446}
-[2025-11-07 11:08:48] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"16.42ms","size":1}
-[2025-11-07 11:08:48] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"31.37ms","size":6446}
-[2025-11-07 11:08:49] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"15.77ms","size":1}
-[2025-11-07 11:08:49] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"31.98ms","size":6446}
-[2025-11-07 11:08:49] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"13.49ms","size":1}
-[2025-11-07 11:08:49] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"56.58ms","size":6446}
-[2025-11-07 11:08:52] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"14.04ms","size":1}
-[2025-11-07 11:08:52] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"28.53ms","size":6446}
-[2025-11-07 11:08:54] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"15.25ms","size":1}
-[2025-11-07 11:08:54] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"31.82ms","size":6446}
-[2025-11-07 11:08:54] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"15.35ms","size":1}
-[2025-11-07 11:08:54] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"30.68ms","size":6446}
-[2025-11-07 11:08:54] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"14.1ms","size":1}
-[2025-11-07 11:08:54] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"27.41ms","size":6446}
-[2025-11-07 11:09:04] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"752.54ms","size":210301}
-[2025-11-07 11:09:04] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"387.11ms","size":111386}
-[2025-11-07 11:09:04] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"133.43ms","size":50}
-[2025-11-07 11:09:04] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"240.23ms","size":533}
-[2025-11-07 11:09:09] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"36.64ms","size":1}
-[2025-11-07 11:09:22] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"115.14ms","size":533}
-[2025-11-07 11:10:38] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"24.1ms","size":1}
-[2025-11-07 11:11:24] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"24.54ms","size":50}
-[2025-11-07 11:11:25] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"9.62ms","size":1}
-[2025-11-07 11:11:27] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"10.62ms","size":1}
-[2025-11-07 11:11:56] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"11.9ms","size":1}
-[2025-11-07 11:11:56] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"9.24ms","size":1}
-[2025-11-07 11:11:59] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"15.93ms","size":1}
-[2025-11-07 11:11:59] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"32.12ms","size":6446}
-[2025-11-07 11:11:59] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"15.49ms","size":1}
-[2025-11-07 11:12:00] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"37.43ms","size":6446}
-[2025-11-07 11:12:04] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"20.28ms","size":1}
-[2025-11-07 11:12:04] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"33.39ms","size":6446}
-[2025-11-07 11:12:04] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"29.91ms","size":1}
-[2025-11-07 11:12:04] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"27.8ms","size":6446}
-[2025-11-07 11:12:06] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"11.75ms","size":1}
-[2025-11-07 11:12:06] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"30.39ms","size":6446}
-[2025-11-07 11:12:08] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"22.19ms","size":1}
-[2025-11-07 11:12:08] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"39.97ms","size":6446}
-[2025-11-07 11:12:08] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"16.02ms","size":1}
-[2025-11-07 11:12:08] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"30.17ms","size":6446}
-[2025-11-07 11:12:57] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"10.16ms","size":1}
-[2025-11-07 11:13:09] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"8.17ms","size":1}
-[2025-11-07 11:13:37] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"7.87ms","size":1}
-[2025-11-07 11:14:23] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"129.32ms","size":533}
-[2025-11-07 11:14:58] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"1077.87ms","size":210301}
-[2025-11-07 11:14:59] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"468.75ms","size":111386}
-[2025-11-07 11:14:59] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"172.9ms","size":50}
-[2025-11-07 11:14:59] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"240.45ms","size":533}
-[2025-11-07 11:15:01] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"1505.02ms","size":1587365}
-[2025-11-07 11:16:16] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"45.87ms","size":1}
-[2025-11-07 11:16:16] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"32.31ms","size":6446}
-[2025-11-07 11:16:16] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"21.75ms","size":1}
-[2025-11-07 11:16:16] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"86.79ms","size":6446}
-[2025-11-07 11:16:18] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":302,"duration":"42.08ms","size":1}
-[2025-11-07 11:16:18] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"33.13ms","size":6446}
-[2025-11-07 11:16:18] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":302,"duration":"23.92ms","size":1}
-[2025-11-07 11:16:18] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"58.3ms","size":6446}
-[2025-11-07 11:19:44] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"13.54ms","size":1}
-[2025-11-07 11:19:47] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"14.33ms","size":1}
-[2025-11-07 11:19:52] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"14.73ms","size":1}
-[2025-11-07 11:19:53] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"4.23ms","size":1}
-[2025-11-07 11:20:03] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"838.92ms","size":210301}
-[2025-11-07 11:20:03] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"410.99ms","size":111386}
-[2025-11-07 11:20:03] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"154.86ms","size":50}
-[2025-11-07 11:20:03] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"234.69ms","size":533}
-[2025-11-07 11:20:07] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"19.48ms","size":1}
-[2025-11-07 11:20:09] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"4.35ms","size":1}
-[2025-11-07 11:20:21] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"1009.65ms","size":210301}
-[2025-11-07 11:20:22] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"565.55ms","size":111386}
-[2025-11-07 11:20:22] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"419ms","size":533}
-[2025-11-07 11:20:22] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"430.79ms","size":50}
-[2025-11-07 11:20:24] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":302,"duration":"4.75ms","size":1}
-[2025-11-07 11:20:39] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"843.46ms","size":210301}
-[2025-11-07 11:20:40] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"424.17ms","size":111386}
-[2025-11-07 11:20:40] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"292.12ms","size":533}
-[2025-11-07 11:20:40] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"300.46ms","size":50}
-[2025-11-07 11:20:53] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"656.6ms","size":210301}
-[2025-11-07 11:20:54] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"383.4ms","size":111386}
-[2025-11-07 11:20:54] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"170.4ms","size":50}
-[2025-11-07 11:20:54] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"272.7ms","size":533}
-[2025-11-07 11:21:01] info: Proxy performance {"url":"\/Uploads\/201903\/12\/thumb_5c8776cbd74452230.png","method":"GET","status_code":200,"duration":"372.45ms","size":111386}
-[2025-11-07 11:21:01] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"260.4ms","size":533}
-[2025-11-07 11:21:01] info: Proxy performance {"url":"\/index.php","method":"GET","status_code":200,"duration":"266.93ms","size":50}
-[2025-11-10 01:07:27] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"92.15ms","size":555}
-[2025-11-10 01:07:28] info: Proxy performance {"url":"\/favicon.ico","method":"GET","status_code":404,"duration":"3.23ms","size":555}
-[2025-11-10 01:07:34] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"7.31ms","size":555}
-[2025-11-10 01:07:37] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"3.1ms","size":555}
-[2025-11-10 01:08:30] info: Proxy performance {"url":"\/","method":"GET","status_code":301,"duration":"4250.71ms","size":0}
-[2025-11-10 01:08:48] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"4.04ms","size":555}
-[2025-11-10 01:21:59] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"4.55ms","size":555}
-[2025-11-10 01:37:33] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"7.8ms","size":555}
-[2025-11-10 01:38:25] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"26.93ms","size":555}
-[2025-11-10 01:38:34] info: Proxy performance {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","status_code":404,"duration":"4.82ms","size":555}
+[2025-11-14 08:42:10] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 1 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/.well-known\/appspecific\/com.chrome.devtools.json","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
+[2025-11-14 08:43:01] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/.well-known\/appspecific\/com.chrome.devtools.json","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
+[2025-11-14 08:43:01] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/favicon.ico","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
+[2025-11-14 08:43:07] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/.well-known\/appspecific\/com.chrome.devtools.json","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
+[2025-11-14 08:43:08] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/favicon.ico","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
+[2025-11-14 08:43:11] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/favicon.ico","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
+[2025-11-14 08:43:12] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/.well-known\/appspecific\/com.chrome.devtools.json","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
+[2025-11-14 08:43:13] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/favicon.ico","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
+[2025-11-14 08:53:40] info: getBackendConfig: Request Host = localhost
+[2025-11-14 08:53:40] info: No domain mapping found for host: localhost
+[2025-11-14 08:53:40] info: getBackendConfig: No mapping found for host, using default backend
+[2025-11-14 08:53:40] info: getDefaultBackend: Looking for default backend 'primary'
+[2025-11-14 08:53:40] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
+[2025-11-14 08:53:43] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"3169.02ms","size":296637}
+[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
+[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
+[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
+[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
+[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
+[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
+[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
+[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
+[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
+[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
+[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
+[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
+[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
+[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
+[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
+[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
+[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
+[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
+[2025-11-14 09:04:49] info: getBackendConfig: Request Host = localhost
+[2025-11-14 09:04:49] info: No domain mapping found for host: localhost
+[2025-11-14 09:04:49] info: getBackendConfig: No mapping found for host, using default backend
+[2025-11-14 09:04:49] info: getDefaultBackend: Looking for default backend 'primary'
+[2025-11-14 09:04:49] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
+[2025-11-14 09:04:49] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"197.34ms","size":297139}
+[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
+[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
+[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
+[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
+[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
+[2025-11-14 09:08:59] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
+[2025-11-14 09:08:59] info: getBackendConfig: Request Host = dev.local.wd.cn
+[2025-11-14 09:08:59] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
+[2025-11-14 09:08:59] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:08:59] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:08:59] info: resolveBackend: backend is a URL: http://localhost:8080
+[2025-11-14 09:08:59] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:08:59] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"149.47ms","size":291823}
+[2025-11-14 09:13:52] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
+[2025-11-14 09:13:52] info: getBackendConfig: Request Host = dev.local.wd.cn
+[2025-11-14 09:13:52] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
+[2025-11-14 09:13:52] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:13:52] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:13:52] info: resolveBackend: backend is a URL: http://localhost:8080
+[2025-11-14 09:13:52] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:13:52] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"150.57ms","size":291851}
+[2025-11-14 09:14:04] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
+[2025-11-14 09:14:04] info: getBackendConfig: Request Host = dev.local.wd.cn
+[2025-11-14 09:14:04] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
+[2025-11-14 09:14:04] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:14:04] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:14:04] info: resolveBackend: backend is a URL: http://localhost:8080
+[2025-11-14 09:14:04] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:14:04] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"101.49ms","size":291797}
+[2025-11-14 09:15:56] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"localhost:8787","method":"GET","remote_addr":"unknown"}
+[2025-11-14 09:15:56] info: getBackendConfig: Request Host = localhost
+[2025-11-14 09:15:56] info: findDomainMapping: Looking for domain mapping {"host":"localhost","total_mappings":1,"mappings":["dev.local.wd.cn"]}
+[2025-11-14 09:15:56] info: No domain mapping found for host: localhost
+[2025-11-14 09:15:56] info: getBackendConfig: No mapping found for host, using default backend
+[2025-11-14 09:15:56] info: getDefaultBackend: Looking for default backend 'primary'
+[2025-11-14 09:15:56] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
+[2025-11-14 09:15:56] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"143.11ms","size":295666}
+[2025-11-14 09:16:14] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"localhost:8787","method":"GET","remote_addr":"unknown"}
+[2025-11-14 09:24:30] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
+[2025-11-14 09:24:30] info: getBackendConfig: Request Host = dev.local.wd.cn
+[2025-11-14 09:24:30] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
+[2025-11-14 09:24:30] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:24:30] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:24:30] info: resolveBackend: backend is a URL: http://localhost:8080
+[2025-11-14 09:24:30] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:24:30] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"282.32ms","size":291796}
+[2025-11-14 09:30:24] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"host.docker.internal:8787","method":"GET","remote_addr":"unknown"}
+[2025-11-14 09:30:24] info: getBackendConfig: Request Host = host.docker.internal
+[2025-11-14 09:30:24] info: findDomainMapping: Looking for domain mapping {"host":"host.docker.internal","total_mappings":1,"mappings":["dev.local.wd.cn"]}
+[2025-11-14 09:30:24] info: No domain mapping found for host: host.docker.internal
+[2025-11-14 09:30:24] info: getBackendConfig: No mapping found for host, using default backend
+[2025-11-14 09:30:24] info: getDefaultBackend: Looking for default backend 'primary'
+[2025-11-14 09:30:24] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
+[2025-11-14 09:30:46] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"localhost:8787","method":"GET","remote_addr":"unknown"}
+[2025-11-14 09:30:46] info: getBackendConfig: Request Host = localhost
+[2025-11-14 09:30:46] info: findDomainMapping: Looking for domain mapping {"host":"localhost","total_mappings":1,"mappings":["dev.local.wd.cn"]}
+[2025-11-14 09:30:46] info: No domain mapping found for host: localhost
+[2025-11-14 09:30:46] info: getBackendConfig: No mapping found for host, using default backend
+[2025-11-14 09:30:46] info: getDefaultBackend: Looking for default backend 'primary'
+[2025-11-14 09:30:46] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
+[2025-11-14 09:30:47] info: Proxy performance {"url":"\/","method":"GET","status_code":404,"duration":"23613.39ms","size":6603}
+[2025-11-14 09:30:57] info: Proxy performance {"url":"\/","method":"GET","status_code":404,"duration":"11133.76ms","size":6603}
+[2025-11-14 09:31:08] info: handleAdminRequest: Processing admin request {"path":"\/","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:31:08] info: handleAdminRequest: Admin response generated {"path":"\/","status_code":302}
+[2025-11-14 09:31:08] info: handleAdminRequest: Processing admin request {"path":"\/admin\/dashboard","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:31:08] info: handleAdminRequest: Admin response generated {"path":"\/admin\/dashboard","status_code":200}
+[2025-11-14 09:31:08] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/dashboard","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:31:08] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/dashboard","status_code":200}
+[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
+[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
+[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
+[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
+[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
+[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
+[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
+[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
+[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
+[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
+[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
+[2025-11-14 09:32:26] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
+[2025-11-14 09:32:26] info: getBackendConfig: Request Host = dev.local.wd.cn
+[2025-11-14 09:32:26] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
+[2025-11-14 09:32:26] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:32:26] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:32:26] info: resolveBackend: backend is a URL: http://localhost:8080
+[2025-11-14 09:32:26] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
+[2025-11-14 09:32:38] info: Proxy performance {"url":"\/","method":"GET","status_code":404,"duration":"12381.17ms","size":6603}

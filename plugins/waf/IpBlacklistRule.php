@@ -1,8 +1,8 @@
 <?php
 
-namespace Tiangang\Waf\Plugins\Waf;
+namespace app\waf\plugins;
 
-use Tiangang\Waf\Plugins\WafPluginInterface;
+use app\waf\plugins\WafPluginInterface;
 
 /**
  * IP 黑名单规则插件
@@ -109,6 +109,18 @@ class IpBlacklistRule implements WafPluginInterface
     public function getConfig(): array
     {
         return $this->config;
+    }
+    
+    public function supportsQuickDetection(): bool
+    {
+        // IP黑名单检查适合快速检测
+        return true;
+    }
+    
+    public function requiresLicense(): bool
+    {
+        // IP黑名单集成威胁情报需要付费许可证
+        return true;
     }
     
     /**

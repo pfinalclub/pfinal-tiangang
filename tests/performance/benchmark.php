@@ -14,7 +14,7 @@ echo "天罡 WAF 性能基准测试\n";
 echo "====================\n\n";
 
 // 基准测试 1: 请求处理性能
-function benchmarkRequestProcessing(): \Generator
+function benchmarkRequestProcessing(): void
 {
     echo "基准测试 1: 请求处理性能\n";
     echo "------------------------\n";
@@ -29,10 +29,10 @@ function benchmarkRequestProcessing(): \Generator
         // 模拟请求处理
         $tasks = [];
         for ($i = 0; $i < $count; $i++) {
-            $tasks[] = create_task(processRequest($i));
+            $tasks[] = create_task(fn() => processRequest($i));
         }
         
-        $results = yield gather(...$tasks);
+        $results = gather(...$tasks);
         
         $endTime = microtime(true);
         $duration = $endTime - $startTime;
@@ -51,10 +51,10 @@ function benchmarkRequestProcessing(): \Generator
 }
 
 // 处理单个请求
-function processRequest(int $requestId): \Generator
+function processRequest(int $requestId): array
 {
     // 模拟请求处理时间
-    yield sleep(0.001);
+    sleep(0.001);
     
     // 模拟一些处理逻辑
     $data = [
@@ -67,7 +67,7 @@ function processRequest(int $requestId): \Generator
 }
 
 // 基准测试 2: 内存使用性能
-function benchmarkMemoryUsage(): \Generator
+function benchmarkMemoryUsage(): void
 {
     echo "基准测试 2: 内存使用性能\n";
     echo "------------------------\n";
@@ -95,10 +95,10 @@ function benchmarkMemoryUsage(): \Generator
         // 异步处理数据
         $tasks = [];
         foreach (array_chunk($data, 100) as $chunk) {
-            $tasks[] = create_task(processDataChunk($chunk));
+            $tasks[] = create_task(fn() => processDataChunk($chunk));
         }
         
-        yield gather(...$tasks);
+        gather(...$tasks);
         
         $afterProcessMemory = memory_get_usage(true);
         $processMemory = $afterProcessMemory - $afterDataMemory;
@@ -118,14 +118,14 @@ function benchmarkMemoryUsage(): \Generator
 }
 
 // 处理数据块
-function processDataChunk(array $chunk): \Generator
+function processDataChunk(array $chunk): int
 {
-    yield sleep(0.001);
+    sleep(0.001);
     return count($chunk);
 }
 
 // 基准测试 3: 并发性能
-function benchmarkConcurrency(): \Generator
+function benchmarkConcurrency(): void
 {
     echo "基准测试 3: 并发性能\n";
     echo "--------------------\n";
@@ -140,10 +140,10 @@ function benchmarkConcurrency(): \Generator
         // 创建并发任务
         $tasks = [];
         for ($i = 0; $i < $level; $i++) {
-            $tasks[] = create_task(concurrentTask($i));
+            $tasks[] = create_task(fn() => concurrentTask($i));
         }
         
-        $results = yield gather(...$tasks);
+        $results = gather(...$tasks);
         
         $endTime = microtime(true);
         $duration = $endTime - $startTime;
@@ -163,14 +163,14 @@ function benchmarkConcurrency(): \Generator
 }
 
 // 并发任务
-function concurrentTask(int $taskId): \Generator
+function concurrentTask(int $taskId): string
 {
-    yield sleep(0.01);
+    sleep(0.01);
     return $taskId;
 }
 
 // 基准测试 4: 数据库操作性能
-function benchmarkDatabaseOperations(): \Generator
+function benchmarkDatabaseOperations(): void
 {
     echo "基准测试 4: 数据库操作性能\n";
     echo "--------------------------\n";
@@ -185,10 +185,10 @@ function benchmarkDatabaseOperations(): \Generator
         // 模拟数据库操作
         $tasks = [];
         for ($i = 0; $i < $count; $i++) {
-            $tasks[] = create_task(simulateDatabaseOperation($i));
+            $tasks[] = create_task(fn() => simulateDatabaseOperation($i));
         }
         
-        $results = yield gather(...$tasks);
+        $results = gather(...$tasks);
         
         $endTime = microtime(true);
         $duration = $endTime - $startTime;
@@ -208,10 +208,10 @@ function benchmarkDatabaseOperations(): \Generator
 }
 
 // 模拟数据库操作
-function simulateDatabaseOperation(int $operationId): \Generator
+function simulateDatabaseOperation(int $operationId): array
 {
     // 模拟数据库查询时间
-    yield sleep(0.005);
+    sleep(0.005);
     
     return [
         'id' => $operationId,
@@ -221,7 +221,7 @@ function simulateDatabaseOperation(int $operationId): \Generator
 }
 
 // 基准测试 5: 缓存操作性能
-function benchmarkCacheOperations(): \Generator
+function benchmarkCacheOperations(): void
 {
     echo "基准测试 5: 缓存操作性能\n";
     echo "------------------------\n";
@@ -236,10 +236,10 @@ function benchmarkCacheOperations(): \Generator
         // 模拟缓存操作
         $tasks = [];
         for ($i = 0; $i < $size; $i++) {
-            $tasks[] = create_task(simulateCacheOperation($i));
+            $tasks[] = create_task(fn() => simulateCacheOperation($i));
         }
         
-        $results = yield gather(...$tasks);
+        $results = gather(...$tasks);
         
         $endTime = microtime(true);
         $duration = $endTime - $startTime;
@@ -259,10 +259,10 @@ function benchmarkCacheOperations(): \Generator
 }
 
 // 模拟缓存操作
-function simulateCacheOperation(int $key): \Generator
+function simulateCacheOperation(int $key): array
 {
     // 模拟缓存读写时间
-    yield sleep(0.001);
+    sleep(0.001);
     
     return [
         'key' => $key,
@@ -272,7 +272,7 @@ function simulateCacheOperation(int $key): \Generator
 }
 
 // 基准测试 6: 系统负载测试
-function benchmarkSystemLoad(): \Generator
+function benchmarkSystemLoad(): void
 {
     echo "基准测试 6: 系统负载测试\n";
     echo "------------------------\n";
@@ -287,10 +287,10 @@ function benchmarkSystemLoad(): \Generator
         // 创建负载任务
         $tasks = [];
         for ($i = 0; $i < 10; $i++) {
-            $tasks[] = create_task(loadTask($load));
+            $tasks[] = create_task(fn() => loadTask($load));
         }
         
-        $results = yield gather(...$tasks);
+        $results = gather(...$tasks);
         
         $endTime = microtime(true);
         $duration = $endTime - $startTime;
@@ -310,9 +310,9 @@ function benchmarkSystemLoad(): \Generator
 }
 
 // 负载任务
-function loadTask(float $load): \Generator
+function loadTask(float $load): bool
 {
-    yield sleep($load);
+    sleep($load);
     return microtime(true);
 }
 
@@ -328,16 +328,16 @@ function formatBytes(int $bytes): string
 }
 
 // 主函数
-function runBenchmarks(): \Generator
+function runBenchmarks(): void
 {
     echo "开始运行性能基准测试...\n\n";
     
-    yield benchmarkRequestProcessing();
-    yield benchmarkMemoryUsage();
-    yield benchmarkConcurrency();
-    yield benchmarkDatabaseOperations();
-    yield benchmarkCacheOperations();
-    yield benchmarkSystemLoad();
+    benchmarkRequestProcessing();
+    benchmarkMemoryUsage();
+    benchmarkConcurrency();
+    benchmarkDatabaseOperations();
+    benchmarkCacheOperations();
+    benchmarkSystemLoad();
     
     echo "性能基准测试完成！\n";
     echo "==================\n";
@@ -360,7 +360,7 @@ function runBenchmarks(): \Generator
 
 // 运行基准测试
 try {
-    \PfinalClub\Asyncio\run(runBenchmarks());
+    \PfinalClub\Asyncio\run(fn() => runBenchmarks());
 } catch (Exception $e) {
     echo "基准测试运行失败: " . $e->getMessage() . "\n";
     echo "错误位置: " . $e->getFile() . ":" . $e->getLine() . "\n";
