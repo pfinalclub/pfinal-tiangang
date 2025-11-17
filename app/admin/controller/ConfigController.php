@@ -486,5 +486,13 @@ class ConfigController extends BaseController
         return $content;
     }
     
+    /**
+     * Nginx 模式配置页面
+     */
+    public function nginxMode(Request $request)
+    {
+        return $this->render('config/nginx_mode');
+    }
+    
 }
 

@@ -39,5 +39,18 @@ return [
     // 健康检查
     '/health' => [\app\admin\controller\DashboardController::class, 'health'],
     '/admin/api/health' => [\app\admin\controller\DashboardController::class, 'health'],
+    
+    // 日志 API
+    '/admin/api/logs' => [\app\admin\controller\LogController::class, 'getLogs'],
+    '/admin/api/logs/stats' => [\app\admin\controller\LogController::class, 'getStats'],
+    '/admin/api/logs/export' => [\app\admin\controller\LogController::class, 'export'],
+    '/admin/api/logs/detail' => [\app\admin\controller\LogController::class, 'getDetail'],
+    '/admin/api/ip/block' => [\app\admin\controller\LogController::class, 'blockIp'],
+    
+    // Nginx 配置 API（供 Lua 脚本读取）
+    '/admin/api/nginx/config' => [\app\admin\controller\NginxController::class, 'exportConfig'],
+    '/admin/api/nginx/reload' => [\app\admin\controller\NginxController::class, 'reloadConfig'],
+    '/admin/api/nginx/status' => [\app\admin\controller\NginxController::class, 'getStatus'],
+    '/admin/api/nginx/test-backend' => [\app\admin\controller\NginxController::class, 'testBackend'],
 ];
 

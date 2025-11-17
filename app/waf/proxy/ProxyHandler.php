@@ -285,7 +285,13 @@ class ProxyHandler
             }
         }
         
-        // 5. 构建目标路径（清理路径，防止路径遍历，支持路径映射）
+        // 5. 提取基础 URL 的查询参数（如果存在）
+        $baseQueryParams = [];
+        if (isset($parsedBase['query']) && !empty($parsedBase['query'])) {
+            parse_str($parsedBase['query'], $baseQueryParams);
+        }
+        
+        // 6. 构建目标路径（清理路径，防止路径遍历，支持路径映射）
         $requestPath = $request->path();
         $path = $this->sanitizePath($requestPath);
         
@@ -300,23 +306,46 @@ class ProxyHandler
             }
         }
         
-        $query = $request->queryString();
+        // 7. 合并查询参数（基础 URL 的查询参数 + 请求的查询参数，请求的优先级更高）
+        $requestQuery = $request->queryString();
+        $queryParams = $baseQueryParams; // 先使用基础 URL 的查询参数
         
-        // 6. 验证并清理查询字符串
-        if ($query) {
-            parse_str($query, $queryParams);
+        if ($requestQuery) {
+            parse_str($requestQuery, $requestQueryParams);
             // 移除可能导致问题的参数
-            unset($queryParams['url'], $queryParams['redirect'], $queryParams['return']);
-            $query = http_build_query($queryParams);
+            unset($requestQueryParams['url'], $requestQueryParams['redirect'], $requestQueryParams['return']);
+            // 合并请求的查询参数（会覆盖基础 URL 中同名的参数）
+            $queryParams = array_merge($queryParams, $requestQueryParams);
         }
         
-        $targetUrl = rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
+        // 8. 重新构建基础 URL（不包含查询参数和路径）
+        $baseUrlWithoutQuery = $parsedBase['scheme'] . '://' . $parsedBase['host'];
+        if (isset($parsedBase['port'])) {
+            $baseUrlWithoutQuery .= ':' . $parsedBase['port'];
+        }
+        if (isset($parsedBase['path'])) {
+            $baseUrlWithoutQuery .= rtrim($parsedBase['path'], '/');
+        }
         
-        if ($query) {
+        // 9. 构建目标 URL
+        $targetUrl = $baseUrlWithoutQuery . '/' . ltrim($path, '/');
+        
+        // 10. 添加合并后的查询参数
+        if (!empty($queryParams)) {
+            $query = http_build_query($queryParams);
             $targetUrl .= '?' . $query;
         }
         
-        // 7. 最终验证：确保目标主机在允许列表中或为空列表（允许所有）
+        // 调试日志：记录构建的目标 URL
+        if (function_exists('logger')) {
+            logger('info', 'buildTargetUrl: Built target URL', [
+                'base_url' => $baseUrl,
+                'request_path' => $requestPath,
+                'target_url' => $targetUrl
+            ]);
+        }
+        
+        // 11. 最终验证：确保目标主机在允许列表中或为空列表（允许所有）
         $parsedTarget = parse_url($targetUrl);
         if ($parsedTarget && isset($parsedTarget['host'])) {
             $targetHost = $parsedTarget['host'];

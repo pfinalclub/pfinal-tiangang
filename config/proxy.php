@@ -19,10 +19,12 @@ return [
     'domain_mappings' => [
         [
             'domain' => 'dev.local.wd.cn',
-            'backend' => 'http://localhost:8080',
+            'backend' => 'http://172.100.0.2:8080/?m',
             'waf_rules' => array (
   0 => 'sql_injection',
   1 => 'xss',
+  2 => 'rate_limit',
+  3 => 'ip_blacklist',
 ),
             'enabled' => true,
             'preserve_host' => true,

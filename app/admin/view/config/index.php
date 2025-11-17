@@ -1,254 +1,76 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配置管理 - 天罡 WAF</title>
-    <link href="//unpkg.com/layui@2.12.1/dist/css/layui.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #F5F6FA;
-            color: #364A63;
-        }
-        
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
-        
-        /* 侧边栏 - 根据 Figma 设计 */
-        .sidebar {
-            width: 180px;
-            background: #FFFFFF;
-            border-radius: 20px 0 0 20px;
-            padding: 20px 0;
-            position: fixed;
-            height: 100vh;
-            left: 0;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .logo {
-            text-align: center;
-            padding: 20px;
-            font-weight: 400;
-            font-size: 14px;
-            color: #364A63;
-            margin-bottom: 30px;
-        }
-        
-        .nav-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            flex: 1;
-        }
-        
-        .nav-item {
-            margin: 0;
-            position: relative;
-        }
-        
-        .nav-item.active .nav-link {
-            background: #F5F6FA;
-            border-radius: 100px 0 0 100px;
-        }
-        
-        .nav-item.active .nav-icon {
-            background: #FFFFFF;
-            border-radius: 50%;
-            padding: 4px;
-        }
-        
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: #364A63;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 400;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .nav-link:hover {
-            background: #EFEFF2;
-            border-radius: 100px 0 0 100px;
-        }
-        
-        .nav-icon {
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .nav-icon svg {
-            width: 100%;
-            height: 100%;
-            stroke: #364A63;
-            fill: none;
-        }
-        
-        .nav-item.active .nav-icon svg {
-            stroke: #364A63;
-        }
-        
-        .nav-text {
-            flex: 1;
-        }
-        
-        /* 主内容区域 */
-        .main-content {
-            flex: 1;
-            margin-left: 180px;
-            padding: 20px;
-        }
-        
-        .config-section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .config-section h3 {
-            margin-bottom: 20px;
-            color: #333;
-            border-bottom: 2px solid #5FB878;
-            padding-bottom: 10px;
-        }
-        .mapping-item {
-            border: 1px solid #e6e6e6;
-            border-radius: 4px;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: #fafafa;
-        }
-        .mapping-item:hover {
-            background: #f0f0f0;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-        }
-        .status-enabled {
-            background: #5FB878;
-            color: white;
-        }
-        .status-disabled {
-            background: #FF5722;
-            color: white;
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-            
-            .main-content {
-                margin-left: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <!-- 侧边栏 - 根据 Figma 设计 -->
-        <nav class="sidebar">
-            <div class="logo">天罡 WAF</div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="/admin" class="nav-link">
-                        <div class="nav-icon">
-                            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
-                            </svg>
-                        </div>
-                        <span class="nav-text">仪表板</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <div class="nav-icon">
-                            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="9" cy="7" r="4"></circle>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                            </svg>
-                        </div>
-                        <span class="nav-text">用户管理</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <div class="nav-icon">
-                            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                            </svg>
-                        </div>
-                        <span class="nav-text">消息中心</span>
-                    </a>
-                </li>
-                <li class="nav-item active">
-                    <a href="/admin/config" class="nav-link">
-                        <div class="nav-icon">
-                            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243m-4.242 0L5.636 18.364m12.728 0l-4.243-4.243m-4.242 0L5.636 5.636"></path>
-                            </svg>
-                        </div>
-                        <span class="nav-text">配置管理</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <div class="nav-icon">
-                            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243m-4.242 0L5.636 18.364m12.728 0l-4.243-4.243m-4.242 0L5.636 5.636"></path>
-                            </svg>
-                        </div>
-                        <span class="nav-text">设置</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/auth/logout" class="nav-link">
-                        <div class="nav-icon">
-                            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                <polyline points="16 17 21 12 16 7"></polyline>
-                                <line x1="21" y1="12" x2="9" y2="12"></line>
-                            </svg>
-                        </div>
-                        <span class="nav-text">退出登录</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        
-        <!-- 主内容区域 -->
-        <div class="main-content">
-            <h2 style="margin-bottom: 20px;">🛡️ 配置管理</h2>
+<?php 
+$pageTitle = '配置管理 - 天罡 WAF 管理控制台';
+$currentPage = 'config';
+$currentMenu = 'config';
+$showBreadcrumb = true;
+$breadcrumbs = [
+    ['title' => '配置管理']
+];
+
+include __DIR__ . '/../layout/header.php';
+?>
+
+<style>
+    /* 页面特定样式 */
+    .config-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .config-section h3 {
+        margin-bottom: 20px;
+        color: #364A63;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    
+    .mapping-item {
+        border: 1px solid #e8e8e8;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 12px;
+        background: #fafafa;
+        transition: all 0.3s;
+    }
+    
+    .mapping-item:hover {
+        background: #f5f5f5;
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .status-enabled {
+        background: #f6ffed;
+        color: #52c41a;
+        border: 1px solid #b7eb8f;
+    }
+    
+    .status-disabled {
+        background: #fff2f0;
+        color: #ff4d4f;
+        border: 1px solid #ffccc7;
+    }
+</style>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <h2 class="content-card-title">
+            <i class="layui-icon layui-icon-set"></i> 配置管理
+        </h2>
+    </div>
         
         <!-- 后端服务配置 -->
         <div class="config-section">
@@ -299,15 +121,13 @@
                 </div>
             </div>
         </div>
-        </div>
-    </div>
-    
-    <script src="//unpkg.com/layui@2.12.1/dist/layui.js"></script>
-    <script>
-        // CSRF Token
-        const csrfToken = '<?= htmlspecialchars($csrfToken ?? '') ?>';
-        layui.use(['layer', 'form'], function(){
-            var layer = layui.layer;
+</div>
+
+<script>
+    // CSRF Token
+    const csrfToken = '<?= htmlspecialchars($csrfToken ?? '') ?>';
+    layui.use(['layer', 'form'], function(){
+        var layer = layui.layer;
             var form = layui.form;
             
             // 加载数据
@@ -597,6 +417,6 @@
             });
         }
     </script>
-</body>
-</html>
+
+<?php include __DIR__ . '/../layout/footer.php'; ?>
 

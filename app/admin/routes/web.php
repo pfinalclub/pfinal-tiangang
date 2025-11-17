@@ -18,6 +18,7 @@ return [
     
     // 配置管理路由
     '/admin/config' => [\app\admin\controller\ConfigController::class, 'configPage'],
+    '/admin/config/nginx-mode' => [\app\admin\controller\ConfigController::class, 'nginxMode'],
     '/admin/config/mapping-form' => [\app\admin\controller\ConfigController::class, 'mappingForm'],
     '/admin/config/domain-form' => [\app\admin\controller\ConfigController::class, 'domainForm'],
     '/admin/config/backend-form' => [\app\admin\controller\ConfigController::class, 'backendForm'],
@@ -37,5 +38,12 @@ return [
     '/admin/plugins/license' => [\app\admin\controller\PluginMarketController::class, 'licenseStatus'],
     '/admin/plugins/license/validate' => [\app\admin\controller\PluginMarketController::class, 'validateLicense'],
     '/admin/plugins/license/renew' => [\app\admin\controller\PluginMarketController::class, 'renewLicense'],
+    
+    // 日志管理路由
+    '/admin/logs' => [\app\admin\controller\LogController::class, 'index'],
+    '/admin/attack-logs' => [\app\admin\controller\LogController::class, 'attackLogs'],
+    
+    // 规则管理路由
+    '/admin/rules' => [\app\admin\controller\RuleController::class, 'index'],
 ];
 

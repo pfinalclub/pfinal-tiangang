@@ -1,151 +1,22 @@
-[2025-11-14 08:42:10] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 1 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/.well-known\/appspecific\/com.chrome.devtools.json","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
-[2025-11-14 08:43:01] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/.well-known\/appspecific\/com.chrome.devtools.json","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
-[2025-11-14 08:43:01] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/favicon.ico","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
-[2025-11-14 08:43:07] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/.well-known\/appspecific\/com.chrome.devtools.json","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
-[2025-11-14 08:43:08] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/favicon.ico","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
-[2025-11-14 08:43:11] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/favicon.ico","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
-[2025-11-14 08:43:12] error: Unexpected proxy error {"url":"\/.well-known\/appspecific\/com.chrome.devtools.json","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/.well-known\/appspecific\/com.chrome.devtools.json","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
-[2025-11-14 08:43:13] error: Unexpected proxy error {"url":"\/favicon.ico","method":"GET","error":"cURL error 7: Failed to connect to localhost port 8081 after 0 ms: Could not connect to server (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/localhost:8081\/favicon.ico","file":"\/Users\/pfinal\/www\/tiangang\/vendor\/guzzlehttp\/guzzle\/src\/Handler\/CurlFactory.php","line":277,"trace":null}
-[2025-11-14 08:53:40] info: getBackendConfig: Request Host = localhost
-[2025-11-14 08:53:40] info: No domain mapping found for host: localhost
-[2025-11-14 08:53:40] info: getBackendConfig: No mapping found for host, using default backend
-[2025-11-14 08:53:40] info: getDefaultBackend: Looking for default backend 'primary'
-[2025-11-14 08:53:40] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
-[2025-11-14 08:53:43] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"3169.02ms","size":296637}
-[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
-[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
-[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
-[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
-[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
-[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
-[2025-11-14 08:59:39] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
-[2025-11-14 08:59:39] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
-[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
-[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
-[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
-[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
-[2025-11-14 09:02:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:02:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
-[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
-[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
-[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
-[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
-[2025-11-14 09:03:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:03:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
-[2025-11-14 09:04:49] info: getBackendConfig: Request Host = localhost
-[2025-11-14 09:04:49] info: No domain mapping found for host: localhost
-[2025-11-14 09:04:49] info: getBackendConfig: No mapping found for host, using default backend
-[2025-11-14 09:04:49] info: getDefaultBackend: Looking for default backend 'primary'
-[2025-11-14 09:04:49] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
-[2025-11-14 09:04:49] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"197.34ms","size":297139}
-[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
-[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
-[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
-[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
-[2025-11-14 09:08:48] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:08:48] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
-[2025-11-14 09:08:59] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
-[2025-11-14 09:08:59] info: getBackendConfig: Request Host = dev.local.wd.cn
-[2025-11-14 09:08:59] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
-[2025-11-14 09:08:59] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:08:59] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:08:59] info: resolveBackend: backend is a URL: http://localhost:8080
-[2025-11-14 09:08:59] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:08:59] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"149.47ms","size":291823}
-[2025-11-14 09:13:52] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
-[2025-11-14 09:13:52] info: getBackendConfig: Request Host = dev.local.wd.cn
-[2025-11-14 09:13:52] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
-[2025-11-14 09:13:52] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:13:52] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:13:52] info: resolveBackend: backend is a URL: http://localhost:8080
-[2025-11-14 09:13:52] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:13:52] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"150.57ms","size":291851}
-[2025-11-14 09:14:04] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
-[2025-11-14 09:14:04] info: getBackendConfig: Request Host = dev.local.wd.cn
-[2025-11-14 09:14:04] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
-[2025-11-14 09:14:04] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:14:04] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:14:04] info: resolveBackend: backend is a URL: http://localhost:8080
-[2025-11-14 09:14:04] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:14:04] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"101.49ms","size":291797}
-[2025-11-14 09:15:56] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"localhost:8787","method":"GET","remote_addr":"unknown"}
-[2025-11-14 09:15:56] info: getBackendConfig: Request Host = localhost
-[2025-11-14 09:15:56] info: findDomainMapping: Looking for domain mapping {"host":"localhost","total_mappings":1,"mappings":["dev.local.wd.cn"]}
-[2025-11-14 09:15:56] info: No domain mapping found for host: localhost
-[2025-11-14 09:15:56] info: getBackendConfig: No mapping found for host, using default backend
-[2025-11-14 09:15:56] info: getDefaultBackend: Looking for default backend 'primary'
-[2025-11-14 09:15:56] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
-[2025-11-14 09:15:56] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"143.11ms","size":295666}
-[2025-11-14 09:16:14] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"localhost:8787","method":"GET","remote_addr":"unknown"}
-[2025-11-14 09:24:30] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
-[2025-11-14 09:24:30] info: getBackendConfig: Request Host = dev.local.wd.cn
-[2025-11-14 09:24:30] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
-[2025-11-14 09:24:30] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:24:30] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:24:30] info: resolveBackend: backend is a URL: http://localhost:8080
-[2025-11-14 09:24:30] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:24:30] info: Proxy performance {"url":"\/","method":"GET","status_code":200,"duration":"282.32ms","size":291796}
-[2025-11-14 09:30:24] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"host.docker.internal:8787","method":"GET","remote_addr":"unknown"}
-[2025-11-14 09:30:24] info: getBackendConfig: Request Host = host.docker.internal
-[2025-11-14 09:30:24] info: findDomainMapping: Looking for domain mapping {"host":"host.docker.internal","total_mappings":1,"mappings":["dev.local.wd.cn"]}
-[2025-11-14 09:30:24] info: No domain mapping found for host: host.docker.internal
-[2025-11-14 09:30:24] info: getBackendConfig: No mapping found for host, using default backend
-[2025-11-14 09:30:24] info: getDefaultBackend: Looking for default backend 'primary'
-[2025-11-14 09:30:24] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
-[2025-11-14 09:30:46] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"localhost:8787","method":"GET","remote_addr":"unknown"}
-[2025-11-14 09:30:46] info: getBackendConfig: Request Host = localhost
-[2025-11-14 09:30:46] info: findDomainMapping: Looking for domain mapping {"host":"localhost","total_mappings":1,"mappings":["dev.local.wd.cn"]}
-[2025-11-14 09:30:46] info: No domain mapping found for host: localhost
-[2025-11-14 09:30:46] info: getBackendConfig: No mapping found for host, using default backend
-[2025-11-14 09:30:46] info: getDefaultBackend: Looking for default backend 'primary'
-[2025-11-14 09:30:46] warning: getDefaultBackend: No backends configured, using hardcoded default: http://localhost:8080
-[2025-11-14 09:30:47] info: Proxy performance {"url":"\/","method":"GET","status_code":404,"duration":"23613.39ms","size":6603}
-[2025-11-14 09:30:57] info: Proxy performance {"url":"\/","method":"GET","status_code":404,"duration":"11133.76ms","size":6603}
-[2025-11-14 09:31:08] info: handleAdminRequest: Processing admin request {"path":"\/","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:31:08] info: handleAdminRequest: Admin response generated {"path":"\/","status_code":302}
-[2025-11-14 09:31:08] info: handleAdminRequest: Processing admin request {"path":"\/admin\/dashboard","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:31:08] info: handleAdminRequest: Admin response generated {"path":"\/admin\/dashboard","status_code":200}
-[2025-11-14 09:31:08] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/dashboard","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:31:08] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/dashboard","status_code":200}
-[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
-[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
-[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
-[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
-[2025-11-14 09:31:12] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:31:12] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
-[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/config","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/config","status_code":200}
-[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/backends","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/backends","status_code":200}
-[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/waf-rules","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/waf-rules","status_code":200}
-[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/path-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/path-mappings","status_code":200}
-[2025-11-14 09:32:16] info: handleAdminRequest: Processing admin request {"path":"\/admin\/api\/config\/domain-mappings","host":"localhost:8989","method":"GET"}
-[2025-11-14 09:32:16] info: handleAdminRequest: Admin response generated {"path":"\/admin\/api\/config\/domain-mappings","status_code":200}
-[2025-11-14 09:32:26] info: handleProxyRequest: Processing proxy request {"path":"\/","host":"dev.local.wd.cn","method":"GET","remote_addr":"unknown"}
-[2025-11-14 09:32:26] info: getBackendConfig: Request Host = dev.local.wd.cn
-[2025-11-14 09:32:26] info: findDomainMapping: Looking for domain mapping {"host":"dev.local.wd.cn","total_mappings":1,"mappings":["dev.local.wd.cn"]}
-[2025-11-14 09:32:26] info: Domain mapping matched: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:32:26] info: Resolving backend for domain mapping: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:32:26] info: resolveBackend: backend is a URL: http://localhost:8080
-[2025-11-14 09:32:26] info: Backend resolved: dev.local.wd.cn -> http://localhost:8080
-[2025-11-14 09:32:38] info: Proxy performance {"url":"\/","method":"GET","status_code":404,"duration":"12381.17ms","size":6603}
+[2025-11-17 02:43:34] info: handleAdminRequest: Processing admin request {"path":"\/admin\/login","host":"localhost:8989","method":"GET"}
+[2025-11-17 02:43:34] info: handleAdminRequest: Admin response generated {"path":"\/admin\/login","status_code":200}
+[2025-11-17 02:43:34] info: handleAdminRequest: Processing admin request {"path":"\/.well-known\/appspecific\/com.chrome.devtools.json","host":"localhost:8989","method":"GET"}
+[2025-11-17 02:43:34] info: handleAdminRequest: Admin response generated {"path":"\/.well-known\/appspecific\/com.chrome.devtools.json","status_code":404}
+[2025-11-17 02:43:45] info: handleAdminRequest: Processing admin request {"path":"\/admin\/auth\/login","host":"localhost:8989","method":"POST"}
+[2025-11-17 02:43:45] info: handleAdminRequest: Admin response generated {"path":"\/admin\/auth\/login","status_code":403}
+[2025-11-17 02:45:00] info: handleAdminRequest: Processing admin request {"path":"\/admin\/login","host":"localhost:8989","method":"GET"}
+[2025-11-17 02:45:00] info: handleAdminRequest: Admin response generated {"path":"\/admin\/login","status_code":200}
+[2025-11-17 02:45:00] info: handleAdminRequest: Processing admin request {"path":"\/.well-known\/appspecific\/com.chrome.devtools.json","host":"localhost:8989","method":"GET"}
+[2025-11-17 02:45:00] info: handleAdminRequest: Admin response generated {"path":"\/.well-known\/appspecific\/com.chrome.devtools.json","status_code":404}
+[2025-11-17 02:45:04] info: handleAdminRequest: Processing admin request {"path":"\/admin\/auth\/login","host":"localhost:8989","method":"POST"}
+[2025-11-17 02:45:04] info: handleAdminRequest: Admin response generated {"path":"\/admin\/auth\/login","status_code":200}
+[2025-11-17 02:45:10] info: handleAdminRequest: Processing admin request {"path":"\/admin\/auth\/login","host":"localhost:8989","method":"POST"}
+[2025-11-17 02:45:10] info: handleAdminRequest: Admin response generated {"path":"\/admin\/auth\/login","status_code":200}
+[2025-11-17 02:45:26] info: handleAdminRequest: Processing admin request {"path":"\/admin\/auth\/login","host":"localhost:8989","method":"POST"}
+[2025-11-17 02:45:26] info: handleAdminRequest: Admin response generated {"path":"\/admin\/auth\/login","status_code":200}
+[2025-11-17 02:45:38] info: handleAdminRequest: Processing admin request {"path":"\/admin\/login","host":"localhost:8989","method":"GET"}
+[2025-11-17 02:45:38] info: handleAdminRequest: Admin response generated {"path":"\/admin\/login","status_code":200}
+[2025-11-17 02:45:38] info: handleAdminRequest: Processing admin request {"path":"\/.well-known\/appspecific\/com.chrome.devtools.json","host":"localhost:8989","method":"GET"}
+[2025-11-17 02:45:38] info: handleAdminRequest: Admin response generated {"path":"\/.well-known\/appspecific\/com.chrome.devtools.json","status_code":404}
+[2025-11-17 02:45:46] info: handleAdminRequest: Processing admin request {"path":"\/admin\/auth\/login","host":"localhost:8989","method":"POST"}
+[2025-11-17 02:45:46] info: handleAdminRequest: Admin response generated {"path":"\/admin\/auth\/login","status_code":200}

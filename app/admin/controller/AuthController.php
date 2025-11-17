@@ -81,7 +81,8 @@ class AuthController
         // 生成 CSRF Token
         $csrfToken = $this->csrfMiddleware->generateToken($sessionId);
         
-        $html = $this->generateLoginPage($csrfToken);
+        // 使用视图文件渲染登录页面
+        $html = $this->renderLoginView($csrfToken);
         
         // 如果有临时Cookie，添加到响应头
         $headers = ['Content-Type' => 'text/html'];
@@ -776,7 +777,25 @@ class AuthController
     }
 
     /**
-     * 生成登录页面HTML（修复：添加 CSRF Token）
+     * 渲染登录视图
+     */
+    private function renderLoginView(string $csrfToken = ''): string
+    {
+        $viewFile = __DIR__ . '/../view/auth/login.php';
+        if (!file_exists($viewFile)) {
+            // 如果视图文件不存在，使用旧的内联HTML
+            return $this->generateLoginPage($csrfToken);
+        }
+        
+        ob_start();
+        extract(['csrfToken' => $csrfToken]);
+        include $viewFile;
+        return ob_get_clean();
+    }
+    
+    /**
+     * 生成登录页面HTML（备用方案，已弃用）
+     * @deprecated 使用 renderLoginView 代替
      */
     private function generateLoginPage(string $csrfToken = ''): string
     {

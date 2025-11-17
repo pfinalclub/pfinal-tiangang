@@ -4,51 +4,58 @@ namespace app\admin\controller;
 
 use Workerman\Protocols\Http\Request;
 use Workerman\Protocols\Http\Response;
+use app\admin\Base\BaseController;
 
 /**
  * WAF 日志管理控制器
  */
-class LogController
+class LogController extends BaseController
 {
     /**
-     * 日志列表
+     * 日志列表页面
      */
     public function index(Request $request): Response
     {
-        $page = $request->get('page', 1);
-        $limit = $request->get('limit', 20);
-        $type = $request->get('type', 'all');
-        $start_time = $request->get('start_time');
-        $end_time = $request->get('end_time');
-
-        // 模拟日志数据
-        $logs = [];
-        for ($i = 0; $i < $limit; $i++) {
-            $logs[] = [
-                'id' => ($page - 1) * $limit + $i + 1,
-                'timestamp' => date('Y-m-d H:i:s', time() - rand(0, 86400)),
-                'ip' => '192.168.1.' . rand(1, 254),
-                'method' => ['GET', 'POST', 'PUT', 'DELETE'][rand(0, 3)],
-                'path' => ['/api/users', '/admin/login', '/dashboard', '/api/data'][rand(0, 3)],
-                'status' => rand(0, 1) ? 'blocked' : 'allowed',
-                'rule' => ['SQL注入检测', 'XSS攻击检测', '频率限制', 'IP黑名单'][rand(0, 3)],
-                'response_time' => rand(10, 500) . 'ms',
-                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'country' => ['中国', '美国', '日本', '韩国'][rand(0, 3)],
-                'city' => ['北京', '上海', '深圳', '广州'][rand(0, 3)]
-            ];
-        }
-
-        return json([
-            'code' => 0,
-            'msg' => 'success',
-            'data' => [
-                'list' => $logs,
-                'total' => 1000,
-                'page' => $page,
-                'limit' => $limit
-            ]
+        return $this->view('logs.index', [
+            'currentPage' => 'logs',
+            'currentMenu' => 'logs'
         ]);
+    }
+    
+    /**
+     * 攻击日志页面
+     */
+    public function attackLogs(Request $request): Response
+    {
+        return $this->view('logs.attack', [
+            'currentPage' => 'logs',
+            'currentMenu' => 'attack-logs'
+        ]);
+    }
+    
+    /**
+     * 获取日志数据（API）
+     */
+    public function getLogs(Request $request): Response
+    {
+        try {
+            $page = (int)$request->get('page', 1);
+            $limit = (int)$request->get('limit', 20);
+            $method = $request->get('method', '');
+            $status = $request->get('status', '');
+            $keyword = $request->get('keyword', '');
+            
+            // 读取 WAF 日志文件
+            $logFile = runtime_path('logs/waf.log');
+            $logs = $this->parseWafLogs($logFile, $page, $limit, $method, $status, $keyword);
+            
+            return $this->success([
+                'count' => $logs['total'],
+                'data' => $logs['data']
+            ]);
+        } catch (\Exception $e) {
+            return $this->error('获取日志失败: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -142,5 +149,191 @@ class LogController
                 'remaining_count' => rand(500, 2000)
             ]
         ]);
+    }
+    
+    /**
+     * 获取日志统计数据（API）
+     */
+    public function getStats(Request $request): Response
+    {
+        try {
+            $logFile = runtime_path('logs/waf.log');
+            $stats = $this->calculateStats($logFile);
+            
+            return $this->success($stats);
+        } catch (\Exception $e) {
+            return $this->error('获取统计数据失败: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 获取日志详情（API）
+     */
+    public function getDetail(Request $request): Response
+    {
+        try {
+            $id = $request->get('id');
+            // 实际应该从数据库或文件中获取
+            return $this->success([
+                'id' => $id,
+                'timestamp' => date('Y-m-d H:i:s'),
+                'ip' => '192.168.1.100',
+                'method' => 'GET',
+                'uri' => '/api/users',
+                'status_code' => 200,
+                'blocked' => false,
+                'details' => '详细信息...'
+            ]);
+        } catch (\Exception $e) {
+            return $this->error('获取详情失败: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 拉黑 IP（API）
+     */
+    public function blockIp(Request $request): Response
+    {
+        try {
+            $postData = json_decode($request->rawBody(), true);
+            $ip = $postData['ip'] ?? '';
+            
+            if (empty($ip)) {
+                return $this->error('IP 地址不能为空');
+            }
+            
+            // TODO: 实际应该写入黑名单配置
+            return $this->success(['message' => "IP {$ip} 已被拉黑"]);
+        } catch (\Exception $e) {
+            return $this->error('拉黑失败: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 解析 WAF 日志
+     */
+    private function parseWafLogs(string $logFile, int $page, int $limit, string $method = '', string $status = '', string $keyword = ''): array
+    {
+        if (!file_exists($logFile)) {
+            return ['data' => [], 'total' => 0];
+        }
+        
+        $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (!$lines) {
+            return ['data' => [], 'total' => 0];
+        }
+        
+        $logs = [];
+        foreach ($lines as $line) {
+            try {
+                // 解析 JSON 格式的日志
+                if (strpos($line, '{') !== false) {
+                    $start = strpos($line, '{');
+                    $jsonStr = substr($line, $start);
+                    $log = json_decode($jsonStr, true);
+                    
+                    if ($log && is_array($log)) {
+                        // 过滤
+                        if ($method && strtoupper($log['method'] ?? '') !== strtoupper($method)) {
+                            continue;
+                        }
+                        
+                        if ($status === '200' && ($log['status_code'] ?? 0) != 200) {
+                            continue;
+                        }
+                        
+                        if ($status === '403' && ($log['blocked'] ?? false) !== true) {
+                            continue;
+                        }
+                        
+                        if ($keyword && stripos(json_encode($log), $keyword) === false) {
+                            continue;
+                        }
+                        
+                        $logs[] = [
+                            'timestamp' => $log['timestamp'] ?? time(),
+                            'ip' => $log['ip'] ?? '-',
+                            'method' => strtoupper($log['method'] ?? 'GET'),
+                            'uri' => $log['uri'] ?? '/',
+                            'status_code' => $log['status_code'] ?? 200,
+                            'response_time' => round(($log['response_time'] ?? 0) * 1000, 2) . 'ms',
+                            'user_agent' => substr($log['user_agent'] ?? '-', 0, 100),
+                            'blocked' => $log['blocked'] ?? false,
+                            'rule' => $log['rule'] ?? '',
+                            'message' => $log['message'] ?? ''
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                // 跳过解析失败的行
+                continue;
+            }
+        }
+        
+        $total = count($logs);
+        $logs = array_slice($logs, ($page - 1) * $limit, $limit);
+        
+        return ['data' => $logs, 'total' => $total];
+    }
+    
+    /**
+     * 计算统计数据
+     */
+    private function calculateStats(string $logFile): array
+    {
+        if (!file_exists($logFile)) {
+            return [
+                'total' => 0,
+                'success' => 0,
+                'blocked' => 0,
+                'error' => 0
+            ];
+        }
+        
+        $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (!$lines) {
+            return [
+                'total' => 0,
+                'success' => 0,
+                'blocked' => 0,
+                'error' => 0
+            ];
+        }
+        
+        $total = 0;
+        $success = 0;
+        $blocked = 0;
+        $error = 0;
+        
+        foreach ($lines as $line) {
+            try {
+                if (strpos($line, '{') !== false) {
+                    $start = strpos($line, '{');
+                    $jsonStr = substr($line, $start);
+                    $log = json_decode($jsonStr, true);
+                    
+                    if ($log && is_array($log)) {
+                        $total++;
+                        
+                        if ($log['blocked'] ?? false) {
+                            $blocked++;
+                        } elseif (($log['status_code'] ?? 0) >= 200 && ($log['status_code'] ?? 0) < 300) {
+                            $success++;
+                        } else {
+                            $error++;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+        
+        return [
+            'total' => $total,
+            'success' => $success,
+            'blocked' => $blocked,
+            'error' => $error
+        ];
     }
 }
